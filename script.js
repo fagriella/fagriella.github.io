@@ -80,7 +80,7 @@ async function initData() {
         renderBookmarks(); // Tampilkan bookmark tersimpan
         
        // Load saved semester filter
-        const savedSemester = localStorage.getItem('semester') || 'all';
+        const savedSemester = localStorage.getItem('semester') || '1';
         const semesterSelect = document.getElementById('semester-filter');
         if (semesterSelect) {
             semesterSelect.value = savedSemester;
