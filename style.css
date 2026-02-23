@@ -440,3 +440,16 @@ body {
     }
     .main-layout { grid-template-columns: 1fr; }
 }
+
+/* Desktop: Center Logo */
+@media (min-width: 992px) {
+    .nav-container {
+        position: relative;
+        justify-content: flex-end; /* Dorong kontrol ke kanan */
+    }
+    .logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%); /* Geser balik 50% lebar elemen agar pas di tengah */
+    }
+}

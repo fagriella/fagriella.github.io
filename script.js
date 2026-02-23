@@ -62,6 +62,23 @@ async function initData() {
     const dashboardStats = document.getElementById('total-courses');
     if(dashboardStats) dashboardStats.innerText = '...';
 
+    // Tentukan semester dari URL/localStorage SEBELUM fetch data, agar UI tidak "flash"
+    let savedSemester;
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1); // Remove '#'
+        if (hash.startsWith('semester')) {
+            savedSemester = hash.replace('semester', '');
+        }
+    }
+    if (!savedSemester) {
+        savedSemester = localStorage.getItem('semester') || '1';
+    }
+
+    const semesterSelect = document.getElementById('semester-filter');
+    if (semesterSelect) {
+        semesterSelect.value = savedSemester;
+    }
+
     try {
         // Fetch semua data secara paralel
         const [coursesRes, materialsRes, assignmentsRes] = await Promise.all([
@@ -75,26 +92,9 @@ async function initData() {
         assignmentsData = parseCSV(assignmentsRes);
 
         // Render UI setelah data siap
-        loadDashboard();
-        loadAssignments();
-        renderBookmarks(); // Tampilkan bookmark tersimpan
-        
-        // Load semester filter from URL hash, fallback to localStorage, then default to '1'
-        let savedSemester;
-        if (window.location.hash) {
-           const hash = window.location.hash.substring(1); // Remove '#'
-           if (hash.startsWith('semester')) {
-               savedSemester = hash.replace('semester', '');
-           }
-        }
-        if (!savedSemester) {
-            savedSemester = localStorage.getItem('semester') || '1';
-        }
-
-        const semesterSelect = document.getElementById('semester-filter');
-        if (semesterSelect) {
-            semesterSelect.value = savedSemester;
-        }
+        loadDashboard(savedSemester);
+        loadAssignments(savedSemester);
+        renderBookmarks(savedSemester); // Tampilkan bookmark tersimpan sesuai semester
         loadCourses(savedSemester);
 
     } catch (error) {
@@ -154,7 +154,7 @@ function parseCSV(csvText) {
 }
 
 // 3. Assignment Logic (Group by Date)
-function loadAssignments() {
+function loadAssignments(semesterFilter) {
     const listContainer = document.getElementById('assignment-list');
     listContainer.innerHTML = '';
 
@@ -188,7 +188,15 @@ function loadAssignments() {
         return dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
+    // Filter Course berdasarkan Semester
+    const validCourses = (!semesterFilter || semesterFilter === 'all')
+        ? coursesData.map(c => c.name)
+        : coursesData.filter(c => c.semester == semesterFilter).map(c => c.name);
+
     const activeAssignments = assignmentsData.filter(task => {
+        // Cek apakah mata kuliah ada di semester ini
+        if (!validCourses.includes(task.course)) return false;
+
         const deadlineDate = parseDateStr(task.deadline);
         const createdDate = parseDateStr(task.date);
         
@@ -379,11 +387,14 @@ function loadCourses(semesterFilter) {
     });
 
     // Update Dashboard Stat
-    document.getElementById('total-courses').innerText = coursesData.length;
+    // Stat ini sekarang di-update oleh loadDashboard()
 }
 
-function loadDashboard() {
-    // Stats sudah diupdate di loadCourses dan loadAssignments
+function loadDashboard(semesterFilter) {
+    const filteredCourses = semesterFilter === 'all'
+        ? coursesData
+        : coursesData.filter(c => c.semester == semesterFilter);
+    document.getElementById('total-courses').innerText = filteredCourses.length;
 }
 
 // 5. Modal & Search Logic
@@ -393,6 +404,9 @@ function setupEventListeners() {
         const selectedSemester = e.target.value;
         localStorage.setItem('semester', selectedSemester);
         loadCourses(selectedSemester);
+        loadDashboard(selectedSemester);
+        loadAssignments(selectedSemester);
+        renderBookmarks(selectedSemester);
 
         // Update URL Hash
         window.location.hash = 'semester' + selectedSemester;
@@ -643,7 +657,7 @@ function toggleBookmark(id, type, title, subtitle, link, event) {
     renderBookmarks();
 }
 
-function renderBookmarks() {
+function renderBookmarks(semesterFilter) {
     const list = document.getElementById('bookmark-list');
     if (!list) return;
 
@@ -651,13 +665,32 @@ function renderBookmarks() {
         list.innerHTML = '<li class="empty-state" style="color:var(--text-secondary); font-size:0.9rem;">Belum ada bookmark</li>';
         return;
     }
+
+    // Filter Bookmark berdasarkan Semester
+    const validCourses = (!semesterFilter || semesterFilter === 'all')
+        ? coursesData.map(c => c.name)
+        : coursesData.filter(c => c.semester == semesterFilter).map(c => c.name);
     
-    list.innerHTML = bookmarks.map(name => {
+    const filteredBookmarks = bookmarks.filter(b => {
+        if (b.type === 'materi') return validCourses.includes(b.subtitle); // subtitle = nama matkul
+        if (b.type === 'tugas') return validCourses.some(c => b.title.includes(c)); // title mengandung nama matkul
+        return true;
+    });
+
+    if (filteredBookmarks.length === 0) {
+        list.innerHTML = '<li class="empty-state" style="color:var(--text-secondary); font-size:0.9rem;">Tidak ada bookmark di semester ini</li>';
+        return;
+    }
+    
+    list.innerHTML = filteredBookmarks.map(b => {
+        const isLink = b.link && b.link !== 'null';
         return `
-            <li class="bookmark-item" style="margin-bottom: 0.5rem;">
-                <a href="#" onclick="openCourseByName('${name.replace(/'/g, "\\'")}'); return false;" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-primary); font-size: 0.9rem;">
-                    <i class="ph ph-star-fill" style="color: var(--accent-color); font-size: 0.8rem;"></i>
-                    ${name}
+            <li class="bookmark-item" style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <a href="${isLink ? b.link : '#'}" ${isLink ? 'target="_blank"' : ''} style="display: block; text-decoration: none; color: var(--text-primary);">
+                    <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 2px;">${b.title}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:4px;">
+                        <i class="ph ph-star-fill" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
+                    </div>
                 </a>
             </li>
         `;
