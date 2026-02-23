@@ -770,46 +770,86 @@ function formatBytes(bytes, decimals = 0) {
 function checkDeadlines(force = false) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const limit = new Date(today);
-    limit.setDate(today.getDate() + 3); // Cek deadline 3 hari ke depan
+    const now = new Date();
+    
+    // Aturan 1: Notifikasi hanya muncul mulai jam 7 pagi
+    if (now.getHours() < 7 && !force) return;
 
-    // Filter tugas yang deadline-nya valid, belum lewat (atau hari ini), dan <= H+3
+    const todayStr = now.toDateString(); // String tanggal hari ini untuk perbandingan
+
     const upcoming = assignmentsData.filter(t => {
         const d = parseDateStr(t.deadline);
-        return d && d >= today && d <= limit;
+        if (!d) return false;
+        
+        // Cek apakah deadline sudah lewat
+        if (d < now) return false;
+        
+        const dlHour = d.getHours();
+        
+        // Aturan 2: 
+        // - Jika deadline PAGI (05:00 - 11:00), notifikasi muncul KEMARIN (H-1)
+        // - Jika deadline SIANG/MALAM/DEFAULT, notifikasi muncul HARI INI (H-0)
+        const isMorningDeadline = dlHour >= 5 && dlHour <= 11;
+        
+        const notifyDate = new Date(d);
+        notifyDate.setHours(0, 0, 0, 0); // Reset ke awal hari
+
+        if (isMorningDeadline) {
+            notifyDate.setDate(notifyDate.getDate() - 1); // Mundur 1 hari
+        }
+
+        // Cek apakah hari ini adalah hari jadwal notifikasi
+        return notifyDate.toDateString() === todayStr;
     });
 
     if (upcoming.length > 0) {
-        // Hanya kirim notifikasi jika dipaksa (klik tombol) atau belum pernah dikirim hari ini (opsional, saat ini kirim tiap load)
         new Notification("Pengingat Tugas Kuliah", {
             body: `Ada ${upcoming.length} tugas yang deadline-nya sebentar lagi! Cek sekarang.`,
             icon: 'https://cdn-icons-png.flaticon.com/512/2991/2991112.png', // Ikon lonceng
             tag: 'deadline-reminder' // Agar tidak spam notifikasi yang sama
         });
     } else if (force) {
-        alert("Tidak ada tugas yang deadline-nya dekat (3 hari ke depan).");
+        alert("Tidak ada notifikasi tugas saat ini (Cek kembali nanti di atas jam 7 pagi).");
     }
 }
 
 // Helper Date Parser (Global)
 function parseDateStr(d) {
     if (!d || typeof d !== 'string') return null;
-    const cleanD = d.trim().replace(/\//g, '-');
+    
+    // Pisahkan Tanggal dan Jam (jika ada)
+    // Contoh: "25-02-2026 09:00" -> dateStr="25-02-2026", timeStr="09:00"
+    const [dateStr, timeStr] = d.trim().split(/\s+/);
+    
+    const cleanD = dateStr.replace(/\//g, '-');
     const parts = cleanD.split('-');
     if (parts.length !== 3) return null;
     
     let [p1, p2, p3] = parts.map(n => parseInt(n, 10));
     if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
     
+    let dateObj;
     // Cek format YYYY-MM-DD (p1 > 31 asumsi tahun)
     if (p1 > 31) {
-        return new Date(p1, p2 - 1, p3);
+        dateObj = new Date(p1, p2 - 1, p3);
+    } else {
+        // Asumsi DD-MM-YYYY
+        let year = p3;
+        if (year < 100) year += 2000;
+        dateObj = new Date(year, p2 - 1, p1);
     }
     
-    // Asumsi DD-MM-YYYY
-    let year = p3;
-    if (year < 100) year += 2000;
-    return new Date(year, p2 - 1, p1);
+    // Handle Jam (Time)
+    if (timeStr) {
+        const [h, m] = timeStr.split(':').map(n => parseInt(n, 10));
+        if (!isNaN(h)) dateObj.setHours(h);
+        if (!isNaN(m)) dateObj.setMinutes(m);
+        else dateObj.setMinutes(0);
+    } else {
+        // Default: Jika tidak ada jam, anggap deadline akhir hari (23:59:59)
+        // Ini agar logika "Deadline Hari Ini" tetap valid sampai malam
+        dateObj.setHours(23, 59, 59);
+    }
+
+    return dateObj;
 }
