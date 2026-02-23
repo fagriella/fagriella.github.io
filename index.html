@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsip Kuliah & Materi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icon Library (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Membuat tampilan lebih lebar (full width) di layar Laptop/PC */
+        @media (min-width: 992px) {
+            .container {
+                max-width: 96% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <i class="ph ph-books"></i> Arsip<span class="accent">Kuliah</span>
+            </a>
+            <div class="nav-controls">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="global-search" placeholder="Cari materi, dosen, atau tugas...">
+                </div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Dark Mode">
+                    <i class="ph ph-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container main-layout">
+        
+        <!-- Sidebar / Dashboard Ringkas -->
+        <aside class="sidebar">
+            <div class="dashboard-card">
+                <h3>Dashboard</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-val" id="total-courses">0</span>
+                        <span class="stat-label">Mata Kuliah</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val" id="total-assignments">0</span>
+                        <span class="stat-label">Tugas Aktif</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="assignment-section">
+                <div class="section-title">
+                    <h3><i class="ph ph-calendar"></i> Tugas Terbaru</h3>
+                </div>
+                <!-- List Tugas (Di-inject oleh JS berdasarkan nama file tanggal) -->
+                <div id="assignment-list" class="assignment-list">
+                    <div class="skeleton-loader"></div>
+                </div>
+            </div>
+
+            <div class="quick-links">
+                <h3>Bookmark</h3>
+                <ul id="bookmark-list" style="list-style: none; padding-left: 0;">
+                    <li class="empty-state">Belum ada bookmark</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content: Daftar Mata Kuliah -->
+        <section class="content-area">
+            <div class="content-header">
+                <h2>Daftar Mata Kuliah</h2>
+                <div class="filters">
+                    <select id="semester-filter">
+                        <option value="all">Semua Semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grid Mata Kuliah (Sumber: Google Sheets Logic) -->
+            <div id="course-grid" class="course-grid">
+                <!-- Course Cards injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Detail Materi -->
+    <div id="material-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Detail Mata Kuliah</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-meta-container"></div>
+                <div class="modal-tabs">
+                    <button class="tab-btn active" data-tab="dokumen">Dokumen</button>
+                    <button class="tab-btn" data-tab="foto">Foto</button>
+                </div>
+                <div class="file-list" id="modal-files">
+                    <!-- File items injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Tugas (JSON Viewer) -->
+    <div id="assignment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detail Tugas Harian</h2>
+                <button class="close-modal" id="close-assign-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1.5rem; color: var(--text-secondary); border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
+                    <i class="ph ph-calendar-check"></i> Tanggal Dibuat: <span id="assign-modal-date" style="font-weight:600; color:var(--text-primary);"></span>
+                </div>
+                <div id="assign-modal-list">
+                    <!-- List Tugas Injected Here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Preview File -->
+    <div id="preview-modal" class="modal" style="z-index: 1100;">
+        <div class="modal-content" style="height: 90vh; max-width: 90vw;">
+            <div class="modal-header">
+                <h2 id="preview-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Preview</h2>
+                <button class="close-modal" id="close-preview-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+                <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
