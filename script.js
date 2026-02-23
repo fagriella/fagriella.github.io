@@ -79,13 +79,13 @@ async function initData() {
         loadAssignments();
         renderBookmarks(); // Tampilkan bookmark tersimpan
         
-        // Load saved semester filter
+       // Load saved semester filter
         const savedSemester = localStorage.getItem('semester') || 'all';
         const semesterSelect = document.getElementById('semester-filter');
         if (semesterSelect) {
             semesterSelect.value = savedSemester;
+            loadCourses(savedSemester); // Load courses after setting the value
         }
-        loadCourses(savedSemester);
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
