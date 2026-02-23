@@ -554,20 +554,29 @@ function renderModalContent(type) {
         fileContainer.innerHTML = docs.map(m => {
             const { icon, color } = getFileIcon(m.type);
             const dateDisplay = new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            
-            // Gunakan link dari CSV jika ada, jika tidak gunakan path default
-            const fileLink = m.link ? m.link : `materi/${course.name}/${m.filename}`;
+
+            // 1. Buat link download (GitHub Raw)
+            // Gunakan link dari CSV jika ada, jika tidak, buat path default ke folder /tugas/
+            const downloadLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/tugas/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
+
+            // 2. Buat link preview
+            let previewLink = downloadLink; // Defaultnya sama dengan link download (untuk gambar, dll)
+            // Jika file office atau PDF, bungkus dengan Google Docs Viewer
+            if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pdf'].includes(m.type)) {
+                previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(downloadLink)}&embedded=true`;
+            }
+
             const itemId = generateId(m);
             const bookmarked = isBookmarked(itemId);
 
             return `
             <div class="file-item" style="display: flex; align-items: center; justify-content: space-between;">
-                <a href="${fileLink}" onclick="event.preventDefault(); previewFile('${fileLink}', '${m.type}', '${m.filename.replace(/'/g, "\\'")}')" style="display: flex; align-items: center; text-decoration: none; color: inherit; flex: 1; cursor: pointer;">
+                <a href="${previewLink}" onclick="event.preventDefault(); showPreview(this.href, '${m.filename.replace(/'/g, "\\'")}')" style="display: flex; align-items: center; text-decoration: none; color: inherit; flex: 1; cursor: pointer;">
                     <i class="ph ${icon}" style="font-size:1.5rem; margin-right:10px; color: ${color};"></i>
                     <div>
                         <div style="font-weight:600;">
                             ${m.filename} 
-                            <span class="file-size-tag" data-url="${fileLink}" style="font-weight:400; font-size:0.85em; color:var(--text-secondary);">
+                            <span class="file-size-tag" data-url="${downloadLink}" style="font-weight:400; font-size:0.85em; color:var(--text-secondary);">
                                 ${m.size ? `(${m.size})` : ''}
                             </span>
                         </div>
@@ -577,10 +586,10 @@ function renderModalContent(type) {
                     </div>
                 </a>
                 <div style="display: flex; align-items: center;">
-                    <a href="${fileLink}" target="_blank" download class="list-bookmark-btn" title="Download">
+                    <a href="${downloadLink}" target="_blank" download class="list-bookmark-btn" title="Download">
                         <i class="ph ph-download-simple"></i>
                     </a>
-                    <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', event)" class="list-bookmark-btn" title="Simpan">
+                    <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${downloadLink}', event)" class="list-bookmark-btn" title="Simpan">
                         <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'var(--text-secondary)'}"></i>
                     </button>
                 </div>
@@ -604,7 +613,7 @@ function renderModalContent(type) {
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem;">
                 ${photos.map(m => {
                     const dateDisplay = new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-                    const fileLink = m.link ? m.link : `materi/${course.name}/${m.filename}`;
+                    const fileLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/tugas/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
                     const itemId = generateId(m);
                     const bookmarked = isBookmarked(itemId);
                     
@@ -705,25 +714,13 @@ function openCourseByName(name) {
 }
 
 // 7. Preview File Logic
-function previewFile(url, type, title) {
+function showPreview(url, title) {
     const modal = document.getElementById('preview-modal');
     const frame = document.getElementById('preview-frame');
     const titleEl = document.getElementById('preview-title');
     
     titleEl.innerText = title;
-    
-    let src = url;
-    
-    // Handle Google Drive Links (Convert view to preview)
-    if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
-        src = url.replace(/\/view.*/, '/preview');
-    } 
-    // Handle Office Files & PDF (Use Google Docs Viewer)
-    else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pdf'].includes(type)) {
-        src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-    }
-    
-    frame.src = src;
+    frame.src = url;
     modal.classList.add('active');
 }
 
