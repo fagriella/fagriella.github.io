@@ -79,13 +79,23 @@ async function initData() {
         loadAssignments();
         renderBookmarks(); // Tampilkan bookmark tersimpan
         
-       // Load saved semester filter
-        const savedSemester = localStorage.getItem('semester') || '1';
+        // Load semester filter from URL hash, fallback to localStorage, then default to '1'
+        let savedSemester = '1';
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1); // Remove '#'
+            if (hash.startsWith('semester')) {
+                savedSemester = hash.replace('semester', '');
+            } else {
+                savedSemester = localStorage.getItem('semester') || '1';
+            }
+        } else {
+            savedSemester = localStorage.getItem('semester') || '1';
+        }
         const semesterSelect = document.getElementById('semester-filter');
         if (semesterSelect) {
             semesterSelect.value = savedSemester;
-            loadCourses(savedSemester); // Load courses after setting the value
-        }
+            loadCourses(savedSemester);
+       }
 
     } catch (error) {
         console.error("Gagal memuat data:", error);
