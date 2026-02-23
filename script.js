@@ -383,6 +383,9 @@ function setupEventListeners() {
         const selectedSemester = e.target.value;
         localStorage.setItem('semester', selectedSemester);
         loadCourses(selectedSemester);
+
+        // Update URL Hash
+        window.location.hash = 'semester' + selectedSemester;
     });
     
     // Search Toggle Mobile
