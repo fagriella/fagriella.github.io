@@ -395,11 +395,19 @@ function setupEventListeners() {
     if (notifBtn) {
         notifBtn.addEventListener('click', () => {
             window.OneSignalDeferred.push(async function(OneSignal) {
-                if (OneSignal.User.PushSubscription.optedIn) {
-                    alert("✅ Status: SUDAH TERDAFTAR.\nAnda akan menerima notifikasi jika ada tugas.");
+                const permission = await OneSignal.getNotificationPermission();
+                const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+
+                let statusMessage = `Status Langganan: ${isSubscribed ? '✅ Terdaftar' : '❌ Belum Terdaftar'}\n`;
+                statusMessage += `Izin Browser: ${permission.toUpperCase()}`;
+
+                if (isSubscribed) {
+                    alert(statusMessage);
+                } else if (permission === 'denied') {
+                    alert(statusMessage + "\n\nNotifikasi diblokir. Harap reset izin notifikasi di pengaturan situs (ikon gembok di address bar).");
                 } else {
+                    alert("Anda belum terdaftar notifikasi. Klik OK untuk memulai pendaftaran.");
                     await OneSignal.User.PushSubscription.optIn();
-                    alert("Silakan klik 'Allow' atau 'Izinkan' pada popup browser untuk mengaktifkan notifikasi.");
                 }
             });
         });
