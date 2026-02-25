@@ -602,7 +602,11 @@ function renderModalContent(type) {
 
     // 2. SORTING: Urutkan berdasarkan tanggal (Terbaru di Atas)
     // b.date - a.date = Descending
-    materials.sort((a, b) => new Date(b.date) - new Date(a.date));
+    materials.sort((a, b) => {
+        const dateA = parseDateStr(a.date) || new Date(0);
+        const dateB = parseDateStr(b.date) || new Date(0);
+        return dateB - dateA;
+    });
 
     // Helper untuk menentukan ikon & warna berdasarkan tipe file
     const getFileIcon = (fileType) => {
@@ -623,7 +627,8 @@ function renderModalContent(type) {
 
         fileContainer.innerHTML = docs.map(m => {
             const { icon, color } = getFileIcon(m.type);
-            const dateDisplay = new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const dateObj = parseDateStr(m.date) || new Date(m.date);
+            const dateDisplay = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
             // 1. Buat link download (GitHub Raw)
             // Gunakan link dari CSV jika ada, jika tidak, buat path default ke folder /tugas/
@@ -688,7 +693,8 @@ function renderModalContent(type) {
         fileContainer.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem;">
                 ${photos.map(m => {
-                    const dateDisplay = new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                    const dateObj = parseDateStr(m.date) || new Date(m.date);
+                    const dateDisplay = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
                     const fileLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
                     const itemId = generateId(m);
                     const bookmarked = isBookmarked(itemId);

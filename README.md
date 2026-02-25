@@ -12,9 +12,9 @@ Digunakan untuk menampilkan kartu mata kuliah di halaman utama.
 | Kolom | Deskripsi | Contoh Isi |
 | :--- | :--- | :--- |
 | `name` | Nama Mata Kuliah | `Pemrograman Web` |
-| `semester` | Semester (Angka) | `2` |
 | `dosen` | Nama Dosen (Bisa multi-baris) | `Budi Santoso, M.Kom` |
-| `pic` | Penanggung Jawab (Bisa banyak, pisahkan koma) | `Yuna, Suci` |
+| `semester` | Semester (Angka) | `2` |
+| `pic` | Penanggung Jawab (Opsional, pisahkan koma) | `Yuna, Suci` |
 
 ### Tab 2: `Materials` (Arsip Materi/Foto)
 Digunakan untuk mengisi konten di dalam modal saat mata kuliah diklik.
@@ -22,9 +22,9 @@ Digunakan untuk mengisi konten di dalam modal saat mata kuliah diklik.
 | Kolom | Deskripsi | Contoh Isi |
 | :--- | :--- | :--- |
 | `course` | Nama Mata Kuliah (Harus sama persis dengan Tab 1) | `Pemrograman Web` |
-| `type` | Tipe File (`pdf`, `doc`, `ppt`, `image`) | `pdf` |
 | `filename` | Judul Materi | `Modul 1 - HTML Dasar` |
-| `date` | Tanggal Upload (YYYY-MM-DD) | `2026-02-20` |
+| `date` | Tanggal Upload (DD-MM-YYYY) | `20-02-2026` |
+| `type` | Tipe File (`pdf`, `doc`, `ppt`, `image`) | `pdf` |
 | `size` | Ukuran File (Opsional) | `2MB` |
 | `link` | Link Download/View (Google Drive/Direct Link) | `https://drive.google.com/...` |
 
