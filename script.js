@@ -690,24 +690,40 @@ function renderModalContent(type) {
             return;
         }
 
+        // Tampilan Grid untuk Foto
         fileContainer.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
                 ${photos.map(m => {
                     const dateObj = parseDateStr(m.date) || new Date(m.date);
                     const dateDisplay = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-                    const fileLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
+                    const fileLink = m.link; // Link dari Google Sheet
+                    
+                    // Buat URL sumber gambar yang bisa ditampilkan langsung, terutama untuk Google Drive
+                    let imgSrc = fileLink;
+                    if (fileLink && fileLink.includes('drive.google.com')) {
+                        const match = fileLink.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match && match[1]) {
+                            imgSrc = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                        }
+                    }
+
+                    // Buat URL untuk preview di iframe
+                    const previewLink = fileLink ? fileLink.replace(/\/view.*/, '/preview') : '#';
+
                     const itemId = generateId(m);
                     const bookmarked = isBookmarked(itemId);
                     
                     return `
-                    <div class="file-item" style="flex-direction: column; align-items: center; text-align: center; padding: 1rem; height: 100%; position: relative;">
-                        <a href="${fileLink}" target="_blank" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center;">
-                            <i class="ph ph-image" style="font-size:2.5rem; color: #10b981; margin-bottom: 0.5rem;"></i>
-                            <div style="font-weight:600; font-size:0.85rem; word-break: break-word;">${m.filename}</div>
-                            <div style="font-size:0.75rem; color: var(--text-secondary); margin-top: 4px;">${dateDisplay}</div>
+                    <div class="file-item" style="flex-direction: column; align-items: stretch; text-align: center; padding: 0; height: auto; position: relative; background: transparent; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);">
+                        <a href="${fileLink}" onclick="event.preventDefault(); showPreview('${previewLink}', '${m.filename.replace(/'/g, "\\'")}')" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%;">
+                            <img src="${imgSrc}" alt="${m.filename}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+                            <div style="padding: 0.75rem; background-color: var(--card-bg); flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                                <div style="font-weight:600; font-size:0.85rem; word-break: break-word; line-height: 1.3;">${m.filename}</div>
+                                <div style="font-size:0.75rem; color: var(--text-secondary); margin-top: 4px;">${dateDisplay}</div>
+                            </div>
                         </a>
-                        <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', event)" class="list-bookmark-btn" style="position: absolute; top: 0; right: 0;">
-                            <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'var(--text-secondary)'}"></i>
+                        <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
                         </button>
                     </div>
                     `;
