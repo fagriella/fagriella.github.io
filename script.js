@@ -7,9 +7,9 @@
 
 // --- KONFIGURASI GOOGLE SHEETS ---
 // Ganti URL di bawah ini dengan Link CSV dari Google Sheet Anda (File > Share > Publish to Web > CSV)
-const COURSES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ79qFIRk6XP-AJQIawW0OHGGT6rOm9YTp5tGxxJgV8EwbGOJxQ_tu_SEXiFEyTuRBE8a4L3L5EV3u4/pub?gid=0&single=true&output=csv';
-const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ79qFIRk6XP-AJQIawW0OHGGT6rOm9YTp5tGxxJgV8EwbGOJxQ_tu_SEXiFEyTuRBE8a4L3L5EV3u4/pub?gid=1254497839&single=true&output=csv';
-const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ79qFIRk6XP-AJQIawW0OHGGT6rOm9YTp5tGxxJgV8EwbGOJxQ_tu_SEXiFEyTuRBE8a4L3L5EV3u4/pub?gid=1922256483&single=true&output=csv';
+const COURSES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=188724190&single=true&output=csv';
+const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1308771559&single=true&output=csv';
+const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1992582246&single=true&output=csv';
 
 // State Data
 let coursesData = [];
