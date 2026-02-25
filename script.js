@@ -575,8 +575,14 @@ function renderModalContent(type) {
 
             // 2. Buat link preview
             let previewLink = downloadLink; // Defaultnya sama dengan link download (untuk gambar, dll)
-            // Jika file office atau PDF, bungkus dengan Google Docs Viewer
-            if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pdf'].includes(m.type)) {
+            
+            // Cek apakah link adalah Google Drive (agar tidak double viewer)
+            if (downloadLink.includes('drive.google.com') || downloadLink.includes('docs.google.com')) {
+                // Ubah /view menjadi /preview agar bisa di-embed di dalam modal
+                previewLink = downloadLink.replace(/\/view.*/, '/preview');
+            } 
+            // Jika file office atau PDF biasa (Direct Link), bungkus dengan Google Docs Viewer
+            else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pdf'].includes(m.type)) {
                 previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(downloadLink)}&embedded=true`;
             }
 
