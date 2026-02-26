@@ -1,4 +1,4 @@
-# Panduan Integrasi Google Sheets - Arsip Kuliah
+# Panduan Integrasi Google Sheets - F.AGRIELLA
 
 Website ini menggunakan **Google Sheets** sebagai database sederhana. Data diambil secara *real-time* menggunakan format CSV yang dipublikasikan ke web.
 

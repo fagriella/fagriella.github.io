@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arsip Kuliah & Materi</title>
+    <title>F.AGRIELLA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,21 +20,35 @@
       });
     </script>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Membuat tampilan lebih lebar (full width) di layar Laptop/PC */
-        @media (min-width: 992px) {
-            .container {
-                max-width: 96% !important;
-            }
-        }
-    </style>
     <script>
-        if (localStorage.getItem('sidebarState') === 'hidden') {
-            document.documentElement.classList.add('sidebar-hidden');
-        }
+        // Mencegah "flash" dengan menerapkan preferensi dari localStorage sebelum render
+        (function() {
+            // Hanya terapkan jika persetujuan untuk personalisasi telah diberikan
+            if (localStorage.getItem('consent_personalization') === 'true') {
+                if (localStorage.getItem('theme') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            }
+        })();
     </script>
 </head>
 <body>
+
+    <!-- Main Menu (Sliding from left) -->
+    <div id="main-menu" class="main-menu">
+        <div class="main-menu-header">
+            <a href="#" class="logo">
+                <span class="accent">F.</span>AGRIELLA
+            </a>
+            <button id="close-main-menu" class="icon-btn" style="font-size: 2rem; color: var(--white);">&times;</button>
+        </div>
+        <ul class="main-menu-links">
+            <li><a href="#" id="menu-beranda"><i class="ph ph-house"></i> Beranda</a></li>
+            <li><a href="#" id="menu-arsip-foto"><i class="ph ph-images"></i> Arsip Foto</a></li>
+            <li><a href="#" id="menu-pengaturan"><i class="ph ph-gear"></i> Pengaturan</a></li>
+        </ul>
+    </div>
+    <div id="menu-overlay" class="menu-overlay"></div>
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
@@ -50,7 +64,7 @@
                     <i class="ph ph-list"></i>
                 </button>
                 <a href="#" class="logo">
-                    Arsip<span class="accent">Kuliah</span>
+                    <span class="accent">F.</span>AGRIELLA
                 </a>
             </div>
             <div class="nav-controls">
@@ -177,6 +191,41 @@
             <div class="modal-body" style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
                 <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src="" allowfullscreen></iframe>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Pengaturan Cookie -->
+    <div id="cookie-settings-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Pusat Privasi</h2>
+                <button class="close-modal" id="close-cookie-settings-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Anda dapat mengontrol penyimpanan data di browser Anda. Pilihan Anda akan disimpan untuk kunjungan berikutnya.</p>
+                <div class="cookie-pref-item">
+                    <h4>Penyimpanan Fungsional</h4>
+                    <p>Selalu aktif. Diperlukan agar situs dapat berfungsi dengan benar.</p>
+                </div>
+                <div class="cookie-pref-item">
+                    <h4>Preferensi & Personalisasi</h4>
+                    <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai (Bookmark).</p>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="consent-personalization-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Pilihan & Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-consent-banner" class="cookie-consent-banner">
+        <p>Situs ini menggunakan penyimpanan lokal untuk fungsionalitas seperti tema & bookmark. Dengan melanjutkan, Anda setuju dengan penggunaan ini.</p>
+        <div class="cookie-consent-actions">
+            <button id="manage-cookies-btn" class="btn-secondary">Kelola Pilihan</button>
+            <button id="accept-cookie-btn">Mengerti & Setuju</button>
         </div>
     </div>
 

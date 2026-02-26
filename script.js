@@ -1,5 +1,5 @@
 /**
- * ARSIP KULIAH - LOGIC
+ * F.AGRIELLA - LOGIC
  * 
  * Sistem ini sekarang menggunakan Google Sheets sebagai database backend.
  * Data diambil dalam format CSV melalui URL publik Google Sheets.
@@ -27,31 +27,94 @@ if (bookmarks.length > 0 && typeof bookmarks[0] === 'string') {
 // --- LOGIC UTAMA ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    initCookieConsent();
     initTheme();
     setupEventListeners();
     initData(); // Mulai fetch data
 });
 
+function initCookieConsent() {
+    const banner = document.getElementById('cookie-consent-banner');
+    const acceptAllBtn = document.getElementById('accept-cookie-btn');
+    const manageBtn = document.getElementById('manage-cookies-btn');
+    const settingsModal = document.getElementById('cookie-settings-modal');
+    const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
+    const closeSettingsBtn = document.getElementById('close-cookie-settings-modal');
+    const personalizationToggle = document.getElementById('consent-personalization-toggle');
+
+    if (!banner) return;
+
+    const showBanner = () => {
+        if (localStorage.getItem('cookieConsent') !== 'true') {
+            banner.classList.add('show');
+        }
+    };
+
+    const hideBanner = () => banner.classList.remove('show');
+
+    const openSettingsModal = () => {
+        // Set toggle state based on current preference
+        personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
+        settingsModal.classList.add('active');
+    };
+
+    const closeSettingsModal = () => settingsModal.classList.remove('active');
+
+    const acceptAll = () => {
+        localStorage.setItem('cookieConsent', 'true');
+        localStorage.setItem('consent_personalization', 'true');
+        hideBanner();
+    };
+
+    const savePreferences = () => {
+        localStorage.setItem('cookieConsent', 'true');
+        localStorage.setItem('consent_personalization', personalizationToggle.checked);
+        hideBanner();
+        closeSettingsModal();
+        // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
+        if (!personalizationToggle.checked) {
+            localStorage.removeItem('theme');
+            localStorage.removeItem('bookmarks');
+            // Reload untuk menerapkan perubahan (misal: kembali ke tema terang)
+            window.location.reload();
+        }
+    };
+
+    // Event Listeners
+    acceptAllBtn.addEventListener('click', acceptAll);
+    manageBtn.addEventListener('click', openSettingsModal);
+    savePrefsBtn.addEventListener('click', savePreferences);
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    setTimeout(() => {
+        showBanner();
+    }, 1500);
+}
+
+
 // 1. Theme Handling
 function initTheme() {
     const toggleBtn = document.getElementById('theme-toggle');
     const icon = toggleBtn.querySelector('i');
-    
-    // Cek preferensi tersimpan
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.setAttribute('data-theme', 'dark');
+
+    // Atur ikon awal berdasarkan tema yang sudah diterapkan oleh skrip inline di <head>
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
         icon.classList.replace('ph-moon', 'ph-sun');
     }
 
     toggleBtn.addEventListener('click', () => {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        // Gunakan documentElement (<html>) untuk konsistensi dengan skrip inline
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (isDark) {
-            document.body.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
+            document.documentElement.removeAttribute('data-theme');
+            if (localStorage.getItem('consent_personalization') === 'true') {
+                localStorage.setItem('theme', 'light');
+            }
             icon.classList.replace('ph-sun', 'ph-moon');
         } else {
-            document.body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (localStorage.getItem('consent_personalization') === 'true') {
+                localStorage.setItem('theme', 'dark');
+            }
             icon.classList.replace('ph-moon', 'ph-sun');
         }
     });
@@ -71,7 +134,11 @@ async function initData() {
         }
     }
     if (!savedSemester) {
-        savedSemester = localStorage.getItem('semester') || '1';
+        if (localStorage.getItem('consent_personalization') === 'true') {
+            savedSemester = localStorage.getItem('semester') || '1';
+        } else {
+            savedSemester = '1';
+        }
     }
 
     const semesterSelect = document.getElementById('semester-filter');
@@ -308,7 +375,7 @@ function openAssignmentModal(encodedData) {
                     ` : ''}
                     
                     <div style="margin-top: 0.5rem; text-align: right;">
-                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0,20)}...', 'Deadline: ${t.deadline}', null, event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0,20)}...', 'Deadline: ${t.deadline}', null, 'tugas', event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                             <i class="ph ${isBookmarked(generateId(t)) ? 'ph-star-fill' : 'ph-star'}" 
                                style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}; font-size: 1.2rem;"></i>
                             <span style="font-size: 0.9rem; color: var(--text-secondary);">Simpan Tugas</span>
@@ -328,8 +395,17 @@ function openAssignmentModal(encodedData) {
 
 // Helper ID Generator
 function generateId(obj) {
-    // Buat ID unik sederhana dari properti objek
-    return btoa(JSON.stringify(obj)).substring(0, 20); 
+    // Buat ID unik menggunakan fungsi hash sederhana pada representasi string dari objek.
+    // Metode btoa(string).substring() sebelumnya sangat rentan terhadap kolisi (ID yang sama untuk item berbeda),
+    // yang menyebabkan bug pada fitur bookmark.
+    const str = JSON.stringify(obj);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return 'id' + Math.abs(hash); // Gunakan Math.abs untuk menghindari ID negatif dan memastikan konsistensi
 }
 
 // 4. Course Logic
@@ -382,17 +458,37 @@ function loadDashboard(semesterFilter) {
 
 // 5. Modal & Search Logic
 function setupEventListeners() {
-    // Sidebar Toggle (PC & Mobile)
+    // Main Menu Toggle
     const menuToggle = document.getElementById('menu-toggle');
+    const mainMenu = document.getElementById('main-menu');
+    const closeMenuBtn = document.getElementById('close-main-menu');
+    const menuOverlay = document.getElementById('menu-overlay');
 
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('sidebar-hidden');
-            // Simpan status ke localStorage
-            const isHidden = document.documentElement.classList.contains('sidebar-hidden');
-            localStorage.setItem('sidebarState', isHidden ? 'hidden' : 'visible');
-        });
-    }
+    const openMenu = () => {
+        mainMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+    };
+    const closeMenu = () => {
+        mainMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+    };
+
+    menuToggle.addEventListener('click', openMenu);
+    closeMenuBtn.addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+
+    // Menu Links
+    document.getElementById('menu-beranda').addEventListener('click', closeMenu);
+    document.getElementById('menu-arsip-foto').addEventListener('click', (e) => {
+        e.preventDefault();
+        openGlobalPhotoArchive();
+        closeMenu();
+    });
+    document.getElementById('menu-pengaturan').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('manage-cookies-btn').click(); // Trigger cookie modal
+        closeMenu();
+    });
     
     // Notification Toggle
     const notifBtn = document.getElementById('notif-toggle');
@@ -420,7 +516,9 @@ function setupEventListeners() {
     // Filter Semester
     document.getElementById('semester-filter').addEventListener('change', (e) => {
         const selectedSemester = e.target.value;
-        localStorage.setItem('semester', selectedSemester);
+        if (localStorage.getItem('consent_personalization') === 'true') {
+            localStorage.setItem('semester', selectedSemester);
+        }
         loadCourses(selectedSemester);
         loadDashboard(selectedSemester);
         loadAssignments(selectedSemester);
@@ -556,6 +654,7 @@ function setupEventListeners() {
 function openCourseModal(course) {
     activeCourse = course; // Set active course
     const modal = document.getElementById('material-modal');
+    const tabs = document.querySelector('.modal-tabs');
     document.getElementById('modal-title').innerText = course.name;
     
     const metaContainer = document.getElementById('modal-meta-container');
@@ -587,12 +686,69 @@ function openCourseModal(course) {
     metaHtml += '</div>';
     metaContainer.innerHTML = metaHtml;
     
+    tabs.style.display = 'flex'; // Pastikan tab terlihat
     // Reset Tabs ke Default (Dokumen)
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.tab-btn[data-tab="dokumen"]').classList.add('active');
     
     // Render Default Content
     renderModalContent('dokumen');
+
+    modal.classList.add('active');
+}
+
+function openGlobalPhotoArchive() {
+    const modal = document.getElementById('material-modal');
+    const title = document.getElementById('modal-title');
+    const metaContainer = document.getElementById('modal-meta-container');
+    const tabs = document.querySelector('.modal-tabs');
+    const fileContainer = document.getElementById('modal-files');
+
+    title.innerText = 'Arsip Foto';
+    metaContainer.innerHTML = ''; // Sembunyikan meta
+    tabs.style.display = 'none'; // Sembunyikan tabs
+
+    const photos = materialsData.filter(m => ['image', 'jpg', 'png', 'jpeg'].includes(m.type));
+
+    if (photos.length === 0) {
+        fileContainer.innerHTML = '<div style="padding:1rem; text-align:center; color:var(--text-secondary);">Belum ada foto di arsip.</div>';
+    } else {
+        // Tampilan Grid untuk Foto
+        fileContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
+                ${photos.map(m => {
+                    const dateObj = parseDateStr(m.date) || new Date(m.date);
+                    const dateDisplay = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                    const fileLink = m.link;
+
+                    let imgSrc = fileLink;
+                    if (fileLink && fileLink.includes('drive.google.com')) {
+                        const match = fileLink.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match && match[1]) {
+                            imgSrc = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                        }
+                    }
+
+                    const previewLink = fileLink ? fileLink.replace(/\/view.*/, '/preview') : '#';
+                    const itemId = generateId(m);
+                    const bookmarked = isBookmarked(itemId);
+
+                    return `
+                    <div class="file-item" style="flex-direction: column; align-items: stretch; text-align: center; padding: 0; height: auto; position: relative; background: transparent; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);">
+                        <a href="${fileLink}" onclick="event.preventDefault(); showPreview('${previewLink}', '${m.filename.replace(/'/g, "\\'")}')" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%;">
+                            <img src="${imgSrc}" alt="${m.filename}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+                            <div style="padding: 0.75rem; background-color: var(--card-bg); flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                                <div style="font-weight:600; font-size:0.85rem; word-break: break-word; line-height: 1.3;">${m.filename}</div>
+                                <div style="font-size:0.75rem; color: var(--text-secondary); margin-top: 4px;">${dateDisplay}</div>
+                            </div>
+                        </a>
+                        <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${m.course}', '${fileLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
+                        </button>
+                    </div>`;
+                }).join('')}
+            </div>`;
+    }
 
     modal.classList.add('active');
 }
@@ -635,8 +791,8 @@ function renderModalContent(type) {
             const dateDisplay = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
             // 1. Buat link download (GitHub Raw)
-            // Gunakan link dari CSV jika ada, jika tidak, buat path default ke folder /tugas/
-            const downloadLink = m.link ? m.link : `https://github.com/arsipkuliah/arsipkuliah.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
+            // Gunakan link dari CSV jika ada, jika tidak, buat path default ke folder /materi/
+            const downloadLink = m.link ? m.link : `https://github.com/FAGRIELLA/FAGRIELLA.github.io/raw/main/materi/${encodeURIComponent(course.name)}/${encodeURIComponent(m.filename)}`;
 
             // 2. Buat link preview
             let previewLink = downloadLink; // Defaultnya sama dengan link download (untuk gambar, dll)
@@ -674,7 +830,7 @@ function renderModalContent(type) {
                     <a href="${downloadLink}" target="_blank" download class="list-bookmark-btn" title="Download">
                         <i class="ph ph-download-simple"></i>
                     </a>
-                    <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${downloadLink}', event)" class="list-bookmark-btn" title="Simpan">
+                    <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${downloadLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan">
                         <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'var(--text-secondary)'}"></i>
                     </button>
                 </div>
@@ -726,7 +882,7 @@ function renderModalContent(type) {
                                 <div style="font-size:0.75rem; color: var(--text-secondary); margin-top: 4px;">${dateDisplay}</div>
                             </div>
                         </a>
-                        <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
+                        <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
                             <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
                         </button>
                     </div>
@@ -742,34 +898,44 @@ function isBookmarked(id) {
     return bookmarks.some(b => b.id === id);
 }
 
-function toggleBookmark(id, type, title, subtitle, link, event) {
+function toggleBookmark(id, type, title, subtitle, link, fileType, event) {
+    if (event) event.stopPropagation();
+
+    const index = bookmarks.findIndex(b => b.id === id);
+    let isNowBookmarked;
+
+    if (index > -1) {
+        // Item ada, hapus dari bookmark
+        bookmarks.splice(index, 1);
+        isNowBookmarked = false;
+    } else {
+        // Item tidak ada, tambahkan ke bookmark
+        bookmarks.push({ id, type, title, subtitle, link, fileType });
+        isNowBookmarked = true;
+    }
+    
+    if (localStorage.getItem('consent_personalization') === 'true') {
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    }
+
+    // Update ikon yang diklik secara langsung untuk feedback instan, JIKA event ada
     if (event) {
-        event.stopPropagation();
-        // Update icon visual secara langsung agar responsif
-        const btn = event.currentTarget;
-        const icon = btn.querySelector('i');
-        
+        const icon = event.currentTarget.querySelector('i');
         if (icon) {
-            if (icon.classList.contains('ph-star-fill')) {
-                icon.classList.remove('ph-star-fill');
-                icon.classList.add('ph-star');
-                icon.style.color = 'var(--text-secondary)';
-            } else {
+            const isPhoto = ['image', 'jpg', 'png', 'jpeg'].includes(fileType);
+            if (isNowBookmarked) {
                 icon.classList.remove('ph-star');
                 icon.classList.add('ph-star-fill');
                 icon.style.color = 'var(--accent-color)';
+            } else {
+                icon.classList.remove('ph-star-fill');
+                icon.classList.add('ph-star');
+                // Foto memiliki warna ikon non-aktif yang berbeda (putih)
+                icon.style.color = isPhoto ? 'white' : 'var(--text-secondary)';
             }
         }
     }
-    
-    const index = bookmarks.findIndex(b => b.id === id);
-    if (index > -1) {
-        bookmarks.splice(index, 1);
-    } else {
-        bookmarks.push({ id, type, title, subtitle, link });
-    }
-    
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+
     // Ambil semester yang sedang aktif dan re-render bookmark list
     const selectedSemester = document.getElementById('semester-filter').value;
     renderBookmarks(selectedSemester);
@@ -791,7 +957,8 @@ function renderBookmarks(semesterFilter) {
     
     const filteredBookmarks = bookmarks.filter(b => {
         if (b.type === 'materi') return validCourses.includes(b.subtitle); // subtitle = nama matkul
-        if (b.type === 'tugas') return validCourses.some(c => b.title.includes(c)); // title mengandung nama matkul
+        // Untuk tugas, title adalah "Nama Matkul - Deskripsi..."
+        if (b.type === 'tugas') return validCourses.some(c => b.title.startsWith(c));
         return true;
     });
 
@@ -799,56 +966,92 @@ function renderBookmarks(semesterFilter) {
         list.innerHTML = '<li class="empty-state" style="color:var(--text-secondary); font-size:0.9rem;">Tidak ada bookmark di semester ini</li>';
         return;
     }
-    
-    list.innerHTML = filteredBookmarks.map(b => {
-        const isLink = b.link && b.link !== 'null';
-        
-        // Logic Preview untuk Bookmark
-        let href = isLink ? b.link : '#';
-        let onclick = '';
-        let target = isLink ? 'target="_blank"' : '';
 
-        if (isLink && b.type === 'materi') {
-            let previewLink = b.link;
-            let canPreview = false;
+    // Pisahkan bookmark foto dan non-foto
+    const photoBookmarks = filteredBookmarks.filter(b => b.fileType && ['image', 'jpg', 'png', 'jpeg'].includes(b.fileType));
+    const otherBookmarks = filteredBookmarks.filter(b => !photoBookmarks.includes(b));
 
-            // 1. Google Drive
-            if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
-                previewLink = b.link.replace(/\/view.*/, '/preview');
-                canPreview = true;
-            } 
-            // 2. Dokumen Office/PDF (Cek ekstensi)
-            else {
-                const lowerUrl = b.link.toLowerCase();
-                const lowerTitle = b.title.toLowerCase();
-                const docExts = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
-                
-                if (docExts.some(ext => lowerUrl.endsWith(ext) || lowerTitle.endsWith(ext))) {
-                    previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(b.link)}&embedded=true`;
+    let html = '';
+
+    // Render bookmark non-foto (dokumen, tugas) sebagai list
+    if (otherBookmarks.length > 0) {
+        html += otherBookmarks.map(b => {
+            const isLink = b.link && b.link !== 'null';
+            
+            // Logic Preview untuk Bookmark
+            let href = isLink ? b.link : '#';
+            let onclick = '';
+            let target = isLink ? 'target="_blank"' : '';
+
+            if (isLink && b.type === 'materi') {
+                let previewLink = b.link;
+                let canPreview = false;
+
+                // 1. Google Drive
+                if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
+                    previewLink = b.link.replace(/\/view.*/, '/preview');
                     canPreview = true;
-                } else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => lowerUrl.endsWith(ext))) {
-                    canPreview = true;
+                } 
+                // 2. Dokumen Office/PDF (Cek ekstensi)
+                else {
+                    const lowerUrl = b.link.toLowerCase();
+                    const lowerTitle = b.title.toLowerCase();
+                    const docExts = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
+                    
+                    if (docExts.some(ext => lowerUrl.endsWith(ext) || lowerTitle.endsWith(ext))) {
+                        previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(b.link)}&embedded=true`;
+                        canPreview = true;
+                    }
+                }
+
+                if (canPreview) {
+                    href = previewLink;
+                    target = '';
+                    onclick = `onclick="event.preventDefault(); showPreview('${previewLink}', '${b.title.replace(/'/g, "\\'")}')"`;
                 }
             }
 
-            if (canPreview) {
-                href = previewLink;
-                target = '';
-                onclick = `onclick="event.preventDefault(); showPreview('${previewLink}', '${b.title.replace(/'/g, "\\'")}')"`;
-            }
-        }
+            return `
+                <li class="bookmark-item" style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <a href="${href}" ${target} ${onclick} style="display: block; text-decoration: none; color: var(--text-primary);">
+                        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 2px;">${b.title}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:4px;">
+                            <i class="ph ph-star-fill" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
+                        </div>
+                    </a>
+                </li>
+            `;
+        }).join('');
+    }
 
-        return `
-            <li class="bookmark-item" style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                <a href="${href}" ${target} ${onclick} style="display: block; text-decoration: none; color: var(--text-primary);">
-                    <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 2px;">${b.title}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:4px;">
-                        <i class="ph ph-star-fill" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
-                    </div>
+    // Render bookmark foto sebagai grid
+    if (photoBookmarks.length > 0) {
+        // Bungkus seluruh bagian grid foto dalam satu <li> agar struktur HTML valid
+        html += '<li style="list-style-type: none; padding: 0; border: none;">';
+        html += '<h4 class="bookmark-grid-title">Foto Tersimpan</h4>';
+        html += '<div class="bookmark-photo-grid">';
+        html += photoBookmarks.map(b => {
+            let imgSrc = b.link;
+            if (imgSrc && imgSrc.includes('drive.google.com')) {
+                const match = imgSrc.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    imgSrc = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+            }
+            const previewLink = b.link ? b.link.replace(/\/view.*/, '/preview') : '#';
+
+            return `
+            <div class="bookmark-photo-item">
+                <a href="${previewLink}" onclick="event.preventDefault(); showPreview('${previewLink}', '${b.title.replace(/'/g, "\\'")}')">
+                    <img src="${imgSrc}" alt="${b.title}" loading="lazy">
+                    <div class="bookmark-photo-title">${b.title}</div>
                 </a>
-            </li>
-        `;
-    }).join('');
+            </div>`;
+        }).join('');
+        html += '</div></li>'; // Menutup div grid dan li pembungkus
+    }
+
+    list.innerHTML = html;
 }
 
 function openCourseByName(name) {

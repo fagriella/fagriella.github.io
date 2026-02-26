@@ -23,7 +23,7 @@
     --radius: 8px;
 }
 
-[data-theme="dark"] {
+html[data-theme="dark"] {
     /* Remap variabel fungsional untuk tema gelap (Green-centric) */
     --bg-color: #101d1a; /* Dark, desaturated green */
     --card-bg: var(--primary-green); /* #1e3932 */
@@ -142,32 +142,8 @@ body {
     transition: grid-template-columns 0.5s ease, gap 0.5s ease;
 }
 
-/* Sidebar Toggling Logic */
-/* On desktop, when sidebar is hidden, content takes full width */
-@media (min-width: 769px) {
-    html.sidebar-hidden .main-layout {
-        grid-template-columns: 0fr 1fr;
-        gap: 0;
-    }
-}
-
-html.sidebar-hidden .sidebar {
-    padding-top: 0;
-    padding-bottom: 0;
-    opacity: 0;
-    border-width: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    max-height: 0; /* Penting untuk animasi mobile (vertical collapse) */
-    transform: translateX(-20px);
-}
-
-html.sidebar-hidden .nav-left #menu-toggle i {
-    transform: rotate(180deg);
-}
-
 /* Sidebar */
-.sidebar { display: flex; flex-direction: column; gap: 1.5rem; transition: all 0.5s ease; overflow: hidden; max-height: 2000px; /* Nilai max-height cukup besar untuk animasi */ }
+.sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
 
 .dashboard-card, .assignment-section, .quick-links {
     background: var(--card-bg);
@@ -191,9 +167,9 @@ html.sidebar-hidden .nav-left #menu-toggle i {
     border-radius: 8px;
 }
 
-[data-theme="dark"] .stat-item { background: #2a4c43; }
+html[data-theme="dark"] .stat-item { background: #2a4c43; }
 .stat-val { display: block; font-size: 1.5rem; font-weight: 700; color: var(--brand-color); }
-[data-theme="dark"] .stat-val { color: var(--accent-color); }
+html[data-theme="dark"] .stat-val { color: var(--accent-color); }
 .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
 
 /* Assignments */
@@ -255,7 +231,7 @@ html.sidebar-hidden .nav-left #menu-toggle i {
     outline: none;
 }
 
-[data-theme="dark"] #semester-filter {
+html[data-theme="dark"] #semester-filter {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
@@ -294,10 +270,10 @@ html.sidebar-hidden .nav-left #menu-toggle i {
     color: var(--text-secondary);
 }
 
-[data-theme="dark"] .course-tag { background: #2a4c43; }
+html[data-theme="dark"] .course-tag { background: #2a4c43; }
 
 .course-title { font-size: 1.1rem; font-weight: 700; margin: 1rem 0 0.5rem 0; color: var(--brand-color); }
-[data-theme="dark"] .course-title { color: var(--text-primary); }
+html[data-theme="dark"] .course-title { color: var(--text-primary); }
 .course-dosen { font-size: 0.9rem; color: var(--text-secondary); display: flex; align-items: flex-start; gap: 0.5rem; }
 
 /* Modal */
@@ -377,7 +353,7 @@ html.sidebar-hidden .nav-left #menu-toggle i {
     color: var(--accent-color);
 }
 
-[data-theme="dark"] .badge {
+html[data-theme="dark"] .badge {
     background: #2a4c43;
     color: var(--text-secondary);
 }
@@ -473,11 +449,6 @@ html.sidebar-hidden .nav-left #menu-toggle i {
         display: block;
     }
     .main-layout { grid-template-columns: 1fr; }
-    
-    /* Fix animasi mobile: Slide ke atas bukan ke samping */
-    html.sidebar-hidden .sidebar {
-        transform: translateY(-20px);
-    }
 }
 
 /* Upload Page Styles */
@@ -493,7 +464,7 @@ html.sidebar-hidden .nav-left #menu-toggle i {
 
 .upload-header { text-align: center; margin-bottom: 2rem; }
 .upload-header h2 { color: var(--brand-color); margin-bottom: 0.5rem; }
-[data-theme="dark"] .upload-header h2 { color: var(--text-primary); }
+html[data-theme="dark"] .upload-header h2 { color: var(--text-primary); }
 .upload-header p { color: var(--text-secondary); font-size: 0.9rem; }
 
 .form-group { margin-bottom: 1.5rem; }
@@ -535,7 +506,7 @@ html.sidebar-hidden .nav-left #menu-toggle i {
 }
 
 .file-preview { margin-top: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--brand-color); text-align: center; }
-[data-theme="dark"] .file-preview { color: var(--accent-color); }
+html[data-theme="dark"] .file-preview { color: var(--accent-color); }
 
 .btn-upload {
     width: 100%;
@@ -590,3 +561,248 @@ html.sidebar-hidden .nav-left #menu-toggle i {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Custom & Overrides --- */
+
+/* Membuat tampilan lebih lebar (full width) di layar Laptop/PC */
+@media (min-width: 992px) {
+    .container {
+        max-width: 96% !important;
+    }
+}
+
+/* Style untuk Bookmark Foto */
+.bookmark-grid-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.bookmark-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+.bookmark-photo-item a {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    position: relative;
+    aspect-ratio: 1 / 1;
+}
+.bookmark-photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background-color: var(--bg-color);
+    transition: transform 0.2s ease;
+}
+.bookmark-photo-item a:hover img {
+    transform: scale(1.05);
+}
+.bookmark-photo-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.8rem 0.5rem 0.5rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Cookie Consent Banner */
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--primary-green);
+    color: var(--white);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1500;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    gap: 1rem;
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.cookie-consent-banner.show {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.cookie-consent-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.cookie-consent-banner .btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--white);
+    color: var(--white);
+}
+.cookie-consent-banner .btn-secondary:hover { background-color: rgba(255,255,255,0.1); }
+
+.cookie-consent-banner p { margin: 0; font-size: 0.9rem; line-height: 1.4; }
+
+.cookie-consent-banner button {
+    background-color: var(--accent-orange);
+    color: var(--white);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.cookie-consent-banner button:hover { background-color: var(--accent-hover); }
+
+@media (max-width: 768px) {
+    .cookie-consent-banner { flex-direction: column; text-align: center; }
+    .cookie-consent-actions { width: 100%; margin-top: 0.5rem; }
+    .cookie-consent-actions button { flex-grow: 1; }
+}
+
+/* Cookie Settings Modal */
+.cookie-pref-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+.cookie-pref-item:first-child {
+    background-color: var(--bg-color);
+    opacity: 0.7;
+}
+.cookie-pref-item h4 { margin-bottom: 0.25rem; font-size: 1rem; }
+.cookie-pref-item p { font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+
+/* Toggle Switch CSS */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--accent-color); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Main Menu (Left Sliding) */
+.main-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 100%;
+    background-color: var(--brand-color);
+    z-index: 1600;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
+}
+
+.main-menu.active {
+    transform: translateX(0);
+}
+
+.main-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    flex-shrink: 0;
+}
+
+.main-menu-links {
+    list-style: none;
+    padding: 1rem 0;
+    flex-grow: 1;
+}
+
+.main-menu-links li a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    border-left: 3px solid transparent;
+    transition: background-color 0.2s, border-left-color 0.2s;
+}
+
+.main-menu-links li a:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left-color: var(--accent-color);
+}
+
+.main-menu-links li a i {
+    font-size: 1.5rem;
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1599;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s, visibility 0.4s;
+}
+
+.menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
