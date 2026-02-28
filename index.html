@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,17 +13,17 @@
     <!-- OneSignal SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "8d435ddc-5a2b-4a91-83c4-3c10d0ed5fc6",
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
+                appId: "8d435ddc-5a2b-4a91-83c4-3c10d0ed5fc6",
+            });
         });
-      });
     </script>
     <link rel="stylesheet" href="style.css">
     <script>
         // Mencegah "flash" dengan menerapkan preferensi dari localStorage sebelum render
-        (function() {
+        (function () {
             // Hanya terapkan jika persetujuan untuk personalisasi telah diberikan
             if (localStorage.getItem('consent_personalization') === 'true') {
                 if (localStorage.getItem('theme') === 'dark') {
@@ -32,6 +33,7 @@
         })();
     </script>
 </head>
+
 <body>
 
     <!-- Main Menu (Sliding from left) -->
@@ -44,8 +46,10 @@
         </div>
         <ul class="main-menu-links">
             <li><a href="#" id="menu-beranda"><i class="ph ph-house"></i> Beranda</a></li>
-            <li><a href="#" id="menu-arsip-foto"><i class="ph ph-images"></i> Arsip Foto</a></li>
-            <li><a href="#" id="menu-pengaturan"><i class="ph ph-gear"></i> Pengaturan</a></li>
+            <li><a href="#arsipfoto" id="menu-arsip-foto"><i class="ph ph-images"></i> Arsip Foto</a></li>
+            <li><a href="#upload" id="menu-upload" style="display: none;"><i class="ph ph-upload-simple"></i> Upload
+                    Materi</a></li>
+            <li><a href="#pengaturan" id="menu-pengaturan"><i class="ph ph-gear"></i> Pengaturan</a></li>
         </ul>
     </div>
     <div id="menu-overlay" class="menu-overlay"></div>
@@ -84,7 +88,7 @@
 
 
     <main class="container main-layout">
-        
+
         <!-- Sidebar / Dashboard Ringkas -->
         <aside class="sidebar">
             <div class="dashboard-card">
@@ -168,8 +172,10 @@
                 <button class="close-modal" id="close-assign-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="margin-bottom: 1.5rem; color: var(--text-secondary); border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
-                    <i class="ph ph-calendar-check"></i> Tanggal Dibuat: <span id="assign-modal-date" style="font-weight:600; color:var(--text-primary);"></span>
+                <div
+                    style="margin-bottom: 1.5rem; color: var(--text-secondary); border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
+                    <i class="ph ph-calendar-check"></i> Tanggal Dibuat: <span id="assign-modal-date"
+                        style="font-weight:600; color:var(--text-primary);"></span>
                 </div>
                 <div id="assign-modal-list">
                     <!-- List Tugas Injected Here -->
@@ -182,14 +188,18 @@
     <div id="preview-modal" class="modal" style="z-index: 1100;">
         <div class="modal-content" style="height: 90vh; max-width: 90vw;">
             <div class="modal-header">
-                <h2 id="preview-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Preview</h2>
+                <h2 id="preview-title"
+                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Preview</h2>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <button id="fullscreen-btn" class="close-modal" style="font-size: 1.5rem;" title="Fullscreen"><i class="ph ph-corners-out"></i></button>
+                    <button id="fullscreen-btn" class="close-modal" style="font-size: 1.5rem;" title="Fullscreen"><i
+                            class="ph ph-corners-out"></i></button>
                     <button class="close-modal" id="close-preview-modal">&times;</button>
                 </div>
             </div>
-            <div class="modal-body" style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
-                <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src="" allowfullscreen></iframe>
+            <div class="modal-body"
+                style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+                <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;" src=""
+                    allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -202,33 +212,63 @@
                 <button class="close-modal" id="close-cookie-settings-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Anda dapat mengontrol penyimpanan data di browser Anda. Pilihan Anda akan disimpan untuk kunjungan berikutnya.</p>
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Anda dapat mengontrol penyimpanan data
+                    di browser Anda. Pilihan Anda akan disimpan untuk kunjungan berikutnya.</p>
                 <div class="cookie-pref-item">
                     <h4>Penyimpanan Fungsional</h4>
                     <p>Selalu aktif. Diperlukan agar situs dapat berfungsi dengan benar.</p>
                 </div>
                 <div class="cookie-pref-item">
                     <h4>Preferensi & Personalisasi</h4>
-                    <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai (Bookmark).</p>
+                    <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai
+                        (Bookmark).</p>
                     <label class="toggle-switch">
                         <input type="checkbox" id="consent-personalization-toggle">
                         <span class="slider"></span>
                     </label>
                 </div>
-                <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Pilihan & Tutup</button>
+
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                <div class="cookie-pref-item">
+                    <h4>Token Akses</h4>
+                    <p>Masukkan kata sandi Token khusus jika Anda memiliki izin untuk mengakses menu Upload.</p>
+                    <div style="margin-top: 1rem;">
+                        <input type="password" id="token-input" placeholder="Masukkan Token"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit; background: var(--bg-color); color: var(--text-primary); box-sizing: border-box;">
+                        <div id="token-status"
+                            style="margin-top: 0.5rem; text-align: left; font-size: 0.85rem; min-height: 1.2em;"></div>
+                    </div>
+                </div>
+
+                <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Perubahan &
+                    Tutup</button>
             </div>
         </div>
     </div>
 
     <!-- Cookie Consent Banner -->
     <div id="cookie-consent-banner" class="cookie-consent-banner">
-        <p>Situs ini menggunakan penyimpanan lokal untuk fungsionalitas seperti tema & bookmark. Dengan melanjutkan, Anda setuju dengan penggunaan ini.</p>
+        <p>Situs ini menggunakan penyimpanan lokal untuk fungsionalitas seperti tema & bookmark. Dengan melanjutkan,
+            Anda setuju dengan penggunaan ini.</p>
         <div class="cookie-consent-actions">
             <button id="manage-cookies-btn" class="btn-secondary">Kelola Pilihan</button>
             <button id="accept-cookie-btn">Mengerti & Setuju</button>
         </div>
     </div>
 
+    <!-- Modal Upload -->
+    <div id="upload-modal" class="modal fullscreen-modal">
+        <div class="modal-content fullscreen">
+            <div class="modal-body" style="padding: 0; flex-grow: 1; position: relative;">
+                <iframe id="upload-iframe" style="width: 100%; height: 100%; border: none;" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+
+
+
     <script src="script.js"></script>
 </body>
+
 </html>

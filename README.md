@@ -40,4 +40,15 @@ Digunakan untuk menampilkan widget "Tugas Terbaru" dan detail tugas harian.
 | `deadline` | Tenggat Waktu (DD-MM-YYYY) | `02-03-2026` |
 | `note` | Catatan Tambahan (Opsional) | `Dikumpulkan di e-learning` |
 
+### Tab 4: `arsipfoto` (Kumpulan Album Foto Ekstra)
+Digunakan untuk menampung gambar/foto tak terikat dengan mata kuliah, atau dikelompokkan secara kustom untuk halaman Arsip Foto.
+
+| Kolom | Deskripsi | Contoh Isi |
+| :--- | :--- | :--- |
+| `album` | Nama Album atau Kategori | `Dokumentasi Makrab` |
+| `course` | Nama Mata Kuliah (Opsional jika ingin di merge ke MK awal) | `Sistem Operasi` |
+| `filename` | Nama File Foto | `Foto Bersama 2026` |
+| `date` | Batas Waktu atau Tanggal | `30-12-2026` |
+| `link` | Link file di GitHub (contoh: /img/foto.jpg) atau URL eksternal lainnya | `/img/foto.jpg` |
+
 ---
