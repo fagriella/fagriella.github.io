@@ -1048,3 +1048,47 @@ input:checked+.slider:before {
     opacity: 1;
     visibility: visible;
 }
+
+/* Fullscreen Results Overrides */
+#spin-results-wrapper.fullscreen-active {
+    padding-top: 5rem !important;
+    /* Ruang untuk header fixed */
+}
+
+.fullscreen-header {
+    position: static;
+}
+
+#spin-results-wrapper.fullscreen-active .fullscreen-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--brand-color);
+    color: var(--white);
+    padding: 1rem 2rem !important;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 0;
+    margin-top: 0 !important;
+}
+
+#spin-results-wrapper.fullscreen-active .fullscreen-header h3 {
+    color: var(--white) !important;
+}
+
+#spin-results-wrapper.fullscreen-active .fullscreen-header button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: var(--white) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+@keyframes spin-wheel {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

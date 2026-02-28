@@ -11,6 +11,7 @@ const COURSES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg
 const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1308771559&single=true&output=csv';
 const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1992582246&single=true&output=csv';
 const ARSIP_FOTO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=474587746&single=true&output=csv'; // Ganti gid arsip foto nantinya
+const MAHASISWA_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1814680259&single=true&output=csv'; // GANTI GID INI DENGAN TAB MAHASISWA
 const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec'; // URL dari autosinkronmateri.gs
 
 // State Data
@@ -18,6 +19,7 @@ let coursesData = [];
 let materialsData = [];
 let assignmentsData = [];
 let arsipFotoData = [];
+let mahasiswaData = [];
 let activeCourse = null; // Menyimpan data course yang sedang dibuka
 
 // Load bookmarks & migrasi data lama jika perlu (dari string ke object)
@@ -233,17 +235,19 @@ async function initData() {
 
     try {
         // Fetch semua data secara paralel
-        const [coursesRes, materialsRes, assignmentsRes, arsipFotoRes] = await Promise.all([
+        const [coursesRes, materialsRes, assignmentsRes, arsipFotoRes, mahasiswaRes] = await Promise.all([
             fetch(COURSES_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => ''),
             fetch(MATERIALS_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => ''),
             fetch(ASSIGNMENTS_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => ''),
-            fetch(ARSIP_FOTO_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => '')
+            fetch(ARSIP_FOTO_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => ''),
+            fetch(MAHASISWA_SHEET_URL).then(r => r.ok ? r.text() : '').catch(() => '')
         ]);
 
         coursesData = parseCSV(coursesRes);
         materialsData = parseCSV(materialsRes);
         assignmentsData = parseCSV(assignmentsRes);
         arsipFotoData = parseCSV(arsipFotoRes);
+        mahasiswaData = parseCSV(mahasiswaRes);
 
         // Render UI setelah data siap
         loadDashboard(savedSemester);
@@ -809,6 +813,24 @@ function checkHashRoute() {
     if (!hash || hash.startsWith('semester')) {
         const btn = document.getElementById('menu-beranda');
         if (btn) btn.classList.add('active');
+
+        // Kembalikan tampilan utama (Beranda)
+        ['container-arsip-foto', 'container-upload', 'container-undi'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Tampilkan content-area utama (course list)
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi)');
+        if (mainContent) mainContent.style.display = 'block';
+
+        // Tampilkan sidebar kembali
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'flex';
+
+        // Kembalikan lebar grid layout
+        const mainLayout = document.querySelector('.main-layout');
+        if (mainLayout) mainLayout.style.gridTemplateColumns = '';
     }
     // 2. Rute Upload
     else if (hash === 'upload') {
@@ -864,6 +886,38 @@ function checkHashRoute() {
         const targetMk = parts[2] ? decodeURIComponent(parts[2]) : null;
 
         openGlobalPhotoArchive(targetSem, targetMk);
+    }
+    // 5. Rute Undi Kelompok Acak
+    else if (hash === 'undi') {
+        const undiBtn = document.getElementById('menu-undi');
+        if (undiBtn) undiBtn.classList.add('active');
+
+        // Hide all containers safely, then show undi
+        ['container-arsip-foto', 'container-upload'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Sembunyikan content-area utama (course list)
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi)');
+        if (mainContent) mainContent.style.display = 'none';
+
+        // Sembunyikan sidebar dan luaskan grid
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+
+        const mainLayout = document.querySelector('.main-layout');
+        if (mainLayout) mainLayout.style.gridTemplateColumns = '1fr';
+
+        // Tampilkan container Undi
+        const undiContainer = document.getElementById('container-undi');
+        if (undiContainer) undiContainer.style.display = 'block';
+
+        const navBrand = document.querySelector('.navbar .logo');
+        if (navBrand) navBrand.innerHTML = '<span class="accent">Undi</span> Kelompok';
+
+        // Trigger initialization UI pengacakan
+        if (typeof initSpinUI === 'function') initSpinUI();
     }
 }
 
@@ -1598,5 +1652,341 @@ function parseDateStr(d) {
         dateObj.setHours(23, 59, 59);
     }
 
-    return dateObj;
+}
+
+// ==========================================
+// 9. RANDOM GROUP GENERATOR (SPIN KELOMPOK)
+// ==========================================
+let isSpinning = false;
+
+function initSpinUI() {
+    const btnSpin = document.getElementById('btn-spin');
+    const displayBox = document.getElementById('spin-names-container');
+    const resultsContainer = document.getElementById('spin-results');
+    const groupInput = document.getElementById('spin-groups');
+    const textarea = document.getElementById('spin-names-textarea');
+    const countDisplay = document.getElementById('spin-names-count');
+    const fullscreenBtn = document.getElementById('btn-fullscreen-results');
+    const resultsWrapper = document.getElementById('spin-results-wrapper');
+    const leftPanel = document.getElementById('spin-left-panel');
+    const groupInputContainer = document.getElementById('spin-group-input-container');
+    const durationInput = document.getElementById('spin-duration-input');
+
+    // Mencegah multiple binding jika fungsi dipanggil ulang oleh router
+    if (btnSpin.dataset.bound) return;
+    btnSpin.dataset.bound = "true";
+
+    // 1. Inisialisasi Textarea dengan data dari Google Sheets (Mahasiswa)
+    const validStudents = mahasiswaData;
+    let initialNames = [];
+
+    if (validStudents.length > 0) {
+        initialNames = validStudents.map(m => {
+            const nameKey = Object.keys(m).find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('nama'));
+            return nameKey ? m[nameKey].trim() : "Tanpa Nama";
+        }).filter(n => n !== "Tanpa Nama" && n !== "");
+    }
+
+    if (textarea.value === '' && initialNames.length > 0) {
+        textarea.value = initialNames.join('\n');
+    }
+
+    const canvas = document.getElementById('spin-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    let currentRotation = 0;
+
+    function drawWheel(names, rotation) {
+        if (!ctx) return;
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radius = Math.min(centerX, centerY) - 10;
+
+        ctx.clearRect(0, 0, width, height);
+        if (names.length === 0) return;
+
+        const sliceAngle = (2 * Math.PI) / names.length;
+
+        for (let i = 0; i < names.length; i++) {
+            const startAngle = rotation + i * sliceAngle;
+            const endAngle = startAngle + sliceAngle;
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.closePath();
+
+            // Alternating colors
+            ctx.fillStyle = i % 2 === 0 ? '#d97706' : '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#d97706';
+            ctx.stroke();
+
+            // Text
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(startAngle + sliceAngle / 2);
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#d97706';
+            ctx.font = 'bold 16px sans-serif';
+            // Limit text length
+            const text = names[i].length > 18 ? names[i].substring(0, 15) + '...' : names[i];
+            ctx.fillText(text, radius - 20, 0);
+            ctx.restore();
+        }
+
+        // Draw center dot
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+        ctx.fillStyle = '#d97706';
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // Update counter saat mengetik
+    const updateCount = () => {
+        const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+        countDisplay.innerText = `${lines.length} Orang`;
+        drawWheel(lines, currentRotation);
+    };
+
+    textarea.addEventListener('input', updateCount);
+    updateCount(); // Initial update
+
+    // Fitur Fullscreen
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                if (resultsWrapper.requestFullscreen) {
+                    resultsWrapper.requestFullscreen();
+                } else if (resultsWrapper.webkitRequestFullscreen) { /* Safari */
+                    resultsWrapper.webkitRequestFullscreen();
+                } else if (resultsWrapper.msRequestFullscreen) { /* IE11 */
+                    resultsWrapper.msRequestFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="ph ph-corners-in"></i> Keluar';
+                resultsWrapper.classList.add('fullscreen-active');
+                resultsWrapper.style.padding = '2rem';
+                resultsWrapper.style.overflowY = 'auto'; // allow scrolling if needed
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="ph ph-corners-out"></i> Fullscreen';
+                resultsWrapper.classList.remove('fullscreen-active');
+                resultsWrapper.style.padding = '0';
+                resultsWrapper.style.overflowY = 'visible';
+            }
+        });
+    }
+
+    btnSpin.addEventListener('click', () => {
+        if (isSpinning) return;
+
+        // Ambil daftar nama langsung dari textarea
+        const namesList = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+
+        if (namesList.length === 0) {
+            alert("Daftar nama masih kosong. Silakan isi terlebih dahulu.");
+            return;
+        }
+
+        const numGroups = parseInt(groupInput.value, 10);
+        if (isNaN(numGroups) || numGroups < 1) {
+            alert("Masukkan jumlah kelompok yang valid.");
+            return;
+        }
+
+        if (numGroups > namesList.length) {
+            alert(`Jumlah kelompok (${numGroups}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
+            return;
+        }
+
+        // 2. Mulai Animasi Pengacakan
+        isSpinning = true;
+        btnSpin.style.cursor = 'not-allowed';
+        resultsContainer.innerHTML = ''; // Bersihkan hasil sebelumnya
+
+        // Animasi memperbesar roda dan menyembunyikan panel lain
+        const spinDisplay = document.getElementById('spin-display');
+        const leftPanel = document.getElementById('spin-left-panel');
+        const groupInputContainer = document.getElementById('spin-group-input-container');
+
+        if (leftPanel) {
+            leftPanel.style.opacity = '0';
+            leftPanel.style.transform = 'scale(0.9)';
+            setTimeout(() => leftPanel.style.display = 'none', 300);
+        }
+        if (groupInputContainer) {
+            groupInputContainer.style.opacity = '0';
+            setTimeout(() => groupInputContainer.style.display = 'none', 300);
+        }
+        btnSpin.style.opacity = '0';
+        setTimeout(() => btnSpin.style.display = 'none', 300);
+
+        if (spinDisplay) {
+            spinDisplay.style.width = '400px';
+            spinDisplay.style.height = '400px';
+            spinDisplay.style.borderWidth = '8px';
+        }
+
+        // --- MULAI LOGIKA SEKUENSIAL ---
+        let remainingNames = shuffleArray([...namesList]);
+        const groups = Array.from({ length: numGroups }, () => []);
+
+        // Acak urutan giliran kelompok (agar kelompok sisa tidak selalu di Kelompok 1 & 2)
+        const groupTurnOrder = shuffleArray(Array.from({ length: numGroups }, (_, i) => i));
+        let roundRobinCounter = 0;
+
+        // Munculkan kontainer kotak kelompok kosong terlebih dahulu
+        let initialHTML = '';
+        for (let i = 0; i < numGroups; i++) {
+            initialHTML += `
+                <div class="group-card" id="group-card-${i}" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);">
+                    <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 2px dashed var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        Kelompok ${i + 1}
+                        <span id="group-count-${i}" style="font-size: 0.8rem; background: var(--card-bg); padding: 2px 8px; border-radius: 12px; color: var(--text-secondary);">0 Orang</span>
+                    </h3>
+                    <ol id="group-list-${i}" style="margin: 0; padding-left: 1.2rem; color: var(--text-primary); line-height: 1.6;">
+                    </ol>
+                </div>
+            `;
+        }
+        resultsContainer.innerHTML = initialHTML;
+
+        function spinSequentialRound() {
+            if (remainingNames.length === 0) {
+                isSpinning = false;
+                if (spinDisplay) {
+                    spinDisplay.style.width = '200px';
+                    spinDisplay.style.height = '200px';
+                    spinDisplay.style.borderWidth = '4px';
+                }
+                setTimeout(() => {
+                    if (leftPanel) { leftPanel.style.display = 'block'; void leftPanel.offsetWidth; leftPanel.style.opacity = '1'; leftPanel.style.transform = 'scale(1)'; }
+                    if (groupInputContainer) { groupInputContainer.style.display = 'block'; void groupInputContainer.offsetWidth; groupInputContainer.style.opacity = '1'; }
+                    btnSpin.style.display = 'block'; void btnSpin.offsetWidth; btnSpin.style.opacity = '1'; btnSpin.style.cursor = 'pointer'; btnSpin.innerHTML = 'Acak Ulang';
+                    if (fullscreenBtn) fullscreenBtn.style.display = 'block';
+                }, 500);
+                return;
+            }
+
+            const targetSeconds = durationInput ? (parseFloat(durationInput.value) || 3) : 3;
+            const fps = 60;
+            const totalFrames = targetSeconds * fps;
+            let baseSpeed = 2.0 / targetSeconds;
+            baseSpeed = Math.max(0.05, Math.min(baseSpeed, 1.5));
+            let spinSpeed = baseSpeed + (Math.random() * (baseSpeed * 0.2));
+            const stopSpeed = 0.002;
+            const friction = Math.exp(Math.log(stopSpeed / spinSpeed) / totalFrames);
+
+            function animateSpin() {
+                currentRotation += spinSpeed;
+                drawWheel(remainingNames, currentRotation);
+                spinSpeed *= friction;
+
+                if (spinSpeed > 0.002) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    let normalizedRotation = currentRotation % (2 * Math.PI);
+                    if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
+
+                    let pointerAngle = (3 * Math.PI) / 2;
+                    let adjustedAngle = pointerAngle - normalizedRotation;
+                    if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
+
+                    const sliceAngle = (2 * Math.PI) / remainingNames.length;
+                    let winnerIndex = Math.floor(adjustedAngle / sliceAngle);
+                    if (winnerIndex >= remainingNames.length) winnerIndex = remainingNames.length - 1;
+                    if (winnerIndex < 0) winnerIndex = 0;
+
+                    const winnerName = remainingNames[winnerIndex];
+                    remainingNames.splice(winnerIndex, 1);
+
+                    // Re-shuffle urutan giliran setiap kali satu putaran penuh (setiap kelompok sudah dapat 1)
+                    if (roundRobinCounter > 0 && roundRobinCounter % numGroups === 0) {
+                        shuffleArray(groupTurnOrder);
+                    }
+
+                    let activeGroup = groupTurnOrder[roundRobinCounter % numGroups];
+                    groups[activeGroup].push(winnerName);
+
+                    const listEl = document.getElementById(`group-list-${activeGroup}`);
+                    const countEl = document.getElementById(`group-count-${activeGroup}`);
+                    if (listEl) {
+                        listEl.innerHTML += `<li style="margin-bottom: 0.25rem;">${winnerName}</li>`;
+                        listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
+
+                    roundRobinCounter++;
+                    setTimeout(spinSequentialRound, 500);
+                }
+            }
+            requestAnimationFrame(animateSpin);
+        }
+        spinSequentialRound();
+    });
+}
+
+// Algoritma Fisher-Yates untuk mengacak array secara mutlak (O(n))
+function shuffleArray(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+}
+
+// Logika pembagian & rendering
+function generateAndRenderGroups(names, numGroups, container) {
+    // Acak daftar nama
+    const shuffledNames = shuffleArray([...names]);
+
+    // Siapkan wadah kelompok (Array of Arrays)
+    const groups = Array.from({ length: numGroups }, () => []);
+
+    // Distribusikan nama satu per satu ke tiap kelompok (Round-robin)
+    // Ini menjamin pembagian paling rata sekalipun jumlah mahasiswa ganjil
+    shuffledNames.forEach((name, index) => {
+        const groupIndex = index % numGroups;
+        groups[groupIndex].push(name);
+    });
+
+    // Acak ulang "wadah" kelompok agar sisa anggota tambahan (jika pembagian ganjil)
+    // tidak selalu jatuh secara berurutan di Kelompok 1, Kelompok 2, dst.
+    const randomizedGroups = shuffleArray(groups);
+
+    // Render ke layar HTML
+    let htmlContent = '';
+    randomizedGroups.forEach((groupMembers, i) => {
+        const groupNumber = i + 1;
+        htmlContent += `
+            <div class="group-card" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 2px dashed var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    Kelompok ${groupNumber}
+                    <span style="font-size: 0.8rem; background: var(--card-bg); padding: 2px 8px; border-radius: 12px; color: var(--text-secondary);">${groupMembers.length} Orang</span>
+                </h3>
+                <ol style="margin: 0; padding-left: 1.2rem; color: var(--text-primary); line-height: 1.6;">
+                    ${groupMembers.map(member => `<li style="margin-bottom: 0.25rem;">${member}</li>`).join('')}
+                </ol>
+            </div>
+        `;
+    });
+
+    container.innerHTML = htmlContent;
 }

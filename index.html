@@ -48,6 +48,7 @@
         <ul class="main-menu-links">
             <li><a href="#" id="menu-beranda"><i class="ph ph-house"></i> Beranda</a></li>
             <li><a href="#arsipfoto" id="menu-arsip-foto"><i class="ph ph-images"></i> Arsip Foto</a></li>
+            <li><a href="#undi" id="menu-undi"><i class="ph ph-dice-five"></i> Undi Kelompok</a></li>
             <li><a href="#upload" id="menu-upload" style="display: none;"><i class="ph ph-upload-simple"></i> Upload
                     Materi</a></li>
             <li><a href="#pengaturan" id="menu-pengaturan"><i class="ph ph-gear"></i> Pengaturan</a></li>
@@ -141,6 +142,110 @@
             <div id="course-grid" class="course-grid">
                 <!-- Course Cards injected here -->
             </div>
+        </section>
+
+        <!-- Arsip Foto Content -->
+        <section id="container-arsip-foto" class="content-area" style="display: none;">
+            <div class="content-header">
+                <h2>📸 Arsip Foto Dokumentasi</h2>
+                <div class="filters">
+                    <select id="arsip-semester-filter">
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="album-grid" id="album-grid">
+                <!-- Album cards injected here -->
+            </div>
+        </section>
+
+        <!-- Undi Kelompok Content (Spin Wheel) -->
+        <section id="container-undi" class="content-area" style="display: none;">
+            <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Undi Kelompok Acak</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem;" title="Lama Putaran (Detik)">
+                    <i class="ph ph-timer" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
+                    <input type="number" id="spin-duration-input" min="1" max="60" value="3"
+                        style="padding: 0.5rem; width: 60px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); outline: none; font-size: 0.9rem; text-align: center;">
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Detik</span>
+                </div>
+            </div>
+            <div class="spin-card" style="padding: 1rem 0; text-align: center; box-sizing: border-box; width: 100%;">
+
+                <div class="spin-controls"
+                    style="display: flex; gap: 2rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+
+                    <!-- Kiri: Textarea -->
+                    <div id="spin-left-panel"
+                        style="text-align: left; flex: 1; min-width: 250px; transition: all 0.5s ease; opacity: 1; transform: scale(1);">
+                        <label for="spin-names-textarea"
+                            style="display:flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 1rem;">
+                            <span>Daftar Nama (Baris Baru)</span>
+                            <span id="spin-names-count" style="font-weight: bold; color: var(--brand-color);">0
+                                Orang</span>
+                        </label>
+                        <textarea id="spin-names-textarea" rows="12"
+                            style="width: 100%; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-size: 1rem; outline: none; resize: vertical;"
+                            placeholder="Memuat data..."></textarea>
+                    </div>
+
+                    <!-- Kanan: Input, Bola Spin, dan Tombol -->
+                    <div id="spin-right-panel"
+                        style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; min-width: 250px; padding-top: 0.5rem; transition: all 0.5s ease; flex: 1;">
+
+                        <div id="spin-group-input-container"
+                            style="text-align: center; width: 100%; transition: opacity 0.3s;">
+                            <label for="spin-groups"
+                                style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Mau
+                                Dibagi Berapa Kelompok?</label>
+                            <input type="number" id="spin-groups" min="1" max="50" value="5"
+                                style="padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-size: 1.2rem; font-weight: bold; outline: none; width: 100%; text-align: center;">
+                        </div>
+
+                        <!-- Bola Spin (Canvas) -->
+                        <div class="spin-display" id="spin-display"
+                            style="width: 200px; height: 200px; overflow: hidden; position: relative; background: var(--bg-color); border: 4px solid #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3); transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1); margin: 0 auto; z-index: 10;">
+                            <!-- Panah Penunjuk -->
+                            <div
+                                style="position: absolute; top: -5px; left: 50%; transform: translateX(-50%); color: #1e3932; font-size: 2.5rem; z-index: 20; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                                <i class="ph-fill ph-caret-down"></i></div>
+                            <canvas id="spin-canvas" width="400" height="400"
+                                style="width: 100%; height: 100%; display: block;"></canvas>
+                        </div>
+
+                        <button id="btn-spin"
+                            style="background: var(--brand-color); color: white; border: none; padding: 1rem 3rem; font-size: 1.2rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); width: 100%;">
+                            Mulai Acak!
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- Tempat Hasil Kelompok -->
+                <div id="spin-results-wrapper"
+                    style="position: relative; background: var(--bg-color); border-radius: var(--radius); transition: all 0.3s ease;">
+                    <div id="results-header" class="fullscreen-header"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; margin-bottom: 1rem; padding: 0 1rem; transition: background 0.3s;">
+                        <h3 style="margin: 0;">Hasil Pembagian</h3>
+                        <button id="btn-fullscreen-results" class="icon-btn"
+                            style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: var(--radius); display: none;">
+                            <i class="ph ph-corners-out"></i> Fullscreen
+                        </button>
+                    </div>
+                    <div id="spin-results"
+                        style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding: 1rem;">
+                        <!-- Hasil diinject via JS -->
+                    </div>
+                </div>
+        </section>
+
+        <!-- iframe Upload -->
+        <section id="container-upload" class="content-area" style="display: none; height: calc(100vh - 100px);">
+            <iframe id="upload-iframe" src="about:blank" frameborder="0" width="100%" height="100%"
+                style="border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);"></iframe>
         </section>
 
     </main>
