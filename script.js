@@ -11,6 +11,7 @@ const COURSES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg
 const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1308771559&single=true&output=csv';
 const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1992582246&single=true&output=csv';
 const ARSIP_FOTO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=0&single=true&output=csv'; // Ganti gid arsip foto nantinya
+const SYNC_SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_DISINI'; // URL dari autosinkronmateri.gs
 
 // State Data
 let coursesData = [];
@@ -198,6 +199,14 @@ function initTheme() {
 
 // 2. Data Fetching & Parsing
 async function initData() {
+    // Jalankan Sinkronisasi Materi di Latar Belakang (Non-blocking)
+    if (SYNC_SCRIPT_URL && SYNC_SCRIPT_URL !== 'MASUKKAN_URL_WEB_APP_DISINI') {
+        fetch(SYNC_SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => console.log("Auto-Sync Response:", data))
+            .catch(err => console.error("Auto-Sync Error:", err));
+    }
+
     const dashboardStats = document.getElementById('total-courses');
     if (dashboardStats) dashboardStats.innerText = '...';
 
@@ -826,11 +835,18 @@ function checkHashRoute() {
         const settingsModal = document.getElementById('cookie-settings-modal');
         if (settingsModal) settingsModal.classList.add('active');
 
-        if (hash === 'token') {
-            const input = document.getElementById('token-input');
-            if (input) input.value = localStorage.getItem('pj_token') || '';
-            const statusEl = document.getElementById('token-status');
-            if (statusEl) statusEl.innerText = '';
+        const input = document.getElementById('token-input');
+        const savedToken = localStorage.getItem('pj_token');
+        if (input) input.value = savedToken || '';
+
+        const statusEl = document.getElementById('token-status');
+        if (statusEl) {
+            if (savedToken) {
+                statusEl.innerText = '✅ Akses Upload Aktif.';
+                statusEl.style.color = 'green';
+            } else {
+                statusEl.innerText = '';
+            }
         }
     }
     // 4. Rute Arsip Foto
