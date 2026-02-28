@@ -78,6 +78,25 @@
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="global-search" placeholder="Cari materi, dosen, atau tugas...">
                 </div>
+                <div id="navbar-undi-settings" class="undi-settings-wrapper" style="display: none;">
+                    <button id="undi-settings-btn" class="icon-btn" aria-label="Pengaturan Undian">
+                        <i class="ph ph-gear"></i>
+                    </button>
+                    <div id="undi-settings-panel" class="undi-settings-panel">
+                        <div class="control-item" title="Lama Putaran (Detik)">
+                            <i class="ph ph-timer" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
+                            <input type="number" id="spin-duration-input" min="1" max="60" value="3">
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Detik</span>
+                        </div>
+                        <div class="control-item">
+                            <label for="skip-animation-toggle" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">Skip</label>
+                            <label class="toggle-switch" style="transform: scale(0.8); margin: 0;">
+                                <input type="checkbox" id="skip-animation-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 <button id="notif-toggle" class="icon-btn" aria-label="Notifikasi">
                     <i class="ph ph-bell"></i>
                 </button>
@@ -164,15 +183,7 @@
 
         <!-- Undi Kelompok Content (Spin Wheel) -->
         <section id="container-undi" class="content-area" style="display: none;">
-            <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Undi Kelompok Acak</h2>
-                <div style="display: flex; align-items: center; gap: 0.5rem;" title="Lama Putaran (Detik)">
-                    <i class="ph ph-timer" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
-                    <input type="number" id="spin-duration-input" min="1" max="60" value="3"
-                        style="padding: 0.5rem; width: 60px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); outline: none; font-size: 0.9rem; text-align: center;">
-                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Detik</span>
-                </div>
-            </div>
+            <!-- Header untuk bagian ini telah dihapus dan kontennya dipindahkan ke navbar -->
             <div class="spin-card" style="padding: 1rem 0; text-align: center; box-sizing: border-box; width: 100%;">
 
                 <div class="spin-controls"
@@ -230,13 +241,18 @@
                     <div id="results-header" class="fullscreen-header"
                         style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; margin-bottom: 1rem; padding: 0 1rem; transition: background 0.3s;">
                         <h3 style="margin: 0;">Hasil Pembagian</h3>
-                        <button id="btn-fullscreen-results" class="icon-btn"
-                            style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: var(--radius); display: none;">
-                            <i class="ph ph-corners-out"></i> Fullscreen
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="btn-share-results" class="icon-btn"
+                                style="background: #25D366; border: none; color: white; padding: 0.5rem; border-radius: var(--radius); display: none;" title="Bagikan ke WhatsApp">
+                                <i class="ph ph-whatsapp-logo" style="font-size: 1.2rem;"></i>
+                            </button>
+                            <button id="btn-fullscreen-results" class="icon-btn"
+                                style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: var(--radius); display: none;" title="Fullscreen">
+                                <i class="ph ph-corners-out" style="font-size: 1.2rem;"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div id="spin-results"
-                        style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding: 1rem;">
+                    <div id="spin-results">
                         <!-- Hasil diinject via JS -->
                     </div>
                 </div>
@@ -332,6 +348,12 @@
                         <input type="checkbox" id="consent-personalization-toggle">
                         <span class="slider"></span>
                     </label>
+                </div>
+                
+                <div class="cookie-pref-item">
+                    <h4>Notifikasi</h4>
+                    <p>Kelola izin notifikasi untuk tugas baru.</p>
+                    <button id="btn-check-notif-settings" style="background: var(--stone-grey); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem;">Cek Status</button>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">

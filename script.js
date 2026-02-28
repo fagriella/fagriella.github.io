@@ -612,6 +612,28 @@ function setupEventListeners() {
         });
     }
 
+    // Notification Settings Button (Inside Modal)
+    const notifSettingsBtn = document.getElementById('btn-check-notif-settings');
+    if (notifSettingsBtn) {
+        notifSettingsBtn.addEventListener('click', () => {
+            window.OneSignalDeferred.push(async function (OneSignal) {
+                const permission = await OneSignal.getNotificationPermission();
+                const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+
+                let statusMessage = `Status Langganan: ${isSubscribed ? 'Terdaftar' : 'Belum Terdaftar'}\n`;
+                statusMessage += `Izin Browser: ${permission.toUpperCase()}`;
+
+                if (isSubscribed) {
+                    alert(statusMessage);
+                } else if (permission === 'denied') {
+                    alert(statusMessage + "\n\nNotifikasi diblokir. Harap reset izin notifikasi di pengaturan situs.");
+                } else {
+                    await OneSignal.User.PushSubscription.optIn();
+                }
+            });
+        });
+    }
+
     // Filter Semester
     document.getElementById('semester-filter').addEventListener('change', (e) => {
         const selectedSemester = e.target.value;
@@ -784,6 +806,21 @@ function setupEventListeners() {
         document.getElementById('token-modal').classList.remove('active');
         window.history.pushState('', document.title, window.location.pathname); // clear hash
     });
+
+    // Undi Settings Toggle (Mobile)
+    const undiSettingsBtn = document.getElementById('undi-settings-btn');
+    const undiSettingsPanel = document.getElementById('undi-settings-panel');
+    if (undiSettingsBtn && undiSettingsPanel) {
+        undiSettingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            undiSettingsPanel.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!undiSettingsPanel.contains(e.target) && !undiSettingsBtn.contains(e.target)) {
+                undiSettingsPanel.classList.remove('active');
+            }
+        });
+    }
 }
 
 // Router Khusus Berbasis Hash Link
@@ -808,6 +845,14 @@ function checkHashRoute() {
     // Kembalikan header utama ke default
     const navBrand = document.querySelector('.navbar .logo');
     if (navBrand) navBrand.innerHTML = '<span class="accent">F.</span>AGRIELLA';
+
+    // --- Navbar Controls Visibility ---
+    const searchBar = document.querySelector('.nav-controls .search-bar');
+    const undiSettings = document.getElementById('navbar-undi-settings');
+
+    // Reset to default state (show search, hide undi settings)
+    if (searchBar) searchBar.style.display = 'flex';
+    if (undiSettings) undiSettings.style.display = 'none';
 
     // 1. Rute Semester (atau kosongan dihitung Beranda)
     if (!hash || hash.startsWith('semester')) {
@@ -915,6 +960,10 @@ function checkHashRoute() {
 
         const navBrand = document.querySelector('.navbar .logo');
         if (navBrand) navBrand.innerHTML = '<span class="accent">Undi</span> Kelompok';
+
+        // Swap search bar with undi settings gear in navbar
+        if (searchBar) searchBar.style.display = 'none';
+        if (undiSettings) undiSettings.style.display = 'block';
 
         // Trigger initialization UI pengacakan
         if (typeof initSpinUI === 'function') initSpinUI();
@@ -1667,10 +1716,16 @@ function initSpinUI() {
     const textarea = document.getElementById('spin-names-textarea');
     const countDisplay = document.getElementById('spin-names-count');
     const fullscreenBtn = document.getElementById('btn-fullscreen-results');
+    const shareBtn = document.getElementById('btn-share-results');
     const resultsWrapper = document.getElementById('spin-results-wrapper');
     const leftPanel = document.getElementById('spin-left-panel');
     const groupInputContainer = document.getElementById('spin-group-input-container');
     const durationInput = document.getElementById('spin-duration-input');
+
+    // Variabel untuk perekaman video
+    let mediaRecorder;
+    let recordedChunks = [];
+    let recordedBlob = null;
 
     // Mencegah multiple binding jika fungsi dipanggil ulang oleh router
     if (btnSpin.dataset.bound) return;
@@ -1706,33 +1761,48 @@ function initSpinUI() {
         ctx.clearRect(0, 0, width, height);
         if (names.length === 0) return;
 
+        // Palet warna harmonis yang cocok satu sama lain
+        const palette = [
+            '#e67e22', // orange
+            '#2ecc71', // green
+            '#3498db', // blue
+            '#9b59b6', // purple
+            '#e74c3c', // red
+            '#1abc9c', // teal
+            '#f39c12', // amber
+            '#2980b9', // dark blue
+            '#16a085', // dark teal
+            '#8e44ad', // dark purple
+        ];
+
         const sliceAngle = (2 * Math.PI) / names.length;
 
         for (let i = 0; i < names.length; i++) {
             const startAngle = rotation + i * sliceAngle;
             const endAngle = startAngle + sliceAngle;
+            const color = palette[i % palette.length];
 
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
             ctx.arc(centerX, centerY, radius, startAngle, endAngle);
             ctx.closePath();
 
-            // Alternating colors
-            ctx.fillStyle = i % 2 === 0 ? '#d97706' : '#ffffff';
+            ctx.fillStyle = color;
             ctx.fill();
             ctx.lineWidth = 2;
-            ctx.strokeStyle = '#d97706';
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
             ctx.stroke();
 
-            // Text
+            // Text -- selalu putih agar terbaca di semua warna
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.rotate(startAngle + sliceAngle / 2);
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#d97706';
+            ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 16px sans-serif';
-            // Limit text length
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 3;
             const text = names[i].length > 18 ? names[i].substring(0, 15) + '...' : names[i];
             ctx.fillText(text, radius - 20, 0);
             ctx.restore();
@@ -1741,7 +1811,9 @@ function initSpinUI() {
         // Draw center dot
         ctx.beginPath();
         ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
-        ctx.fillStyle = '#d97706';
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 2;
         ctx.fill();
         ctx.stroke();
     }
@@ -1767,7 +1839,7 @@ function initSpinUI() {
                 } else if (resultsWrapper.msRequestFullscreen) { /* IE11 */
                     resultsWrapper.msRequestFullscreen();
                 }
-                fullscreenBtn.innerHTML = '<i class="ph ph-corners-in"></i> Keluar';
+                fullscreenBtn.innerHTML = '<i class="ph ph-corners-in" style="font-size: 1.2rem;"></i>';
                 resultsWrapper.classList.add('fullscreen-active');
                 resultsWrapper.style.padding = '2rem';
                 resultsWrapper.style.overflowY = 'auto'; // allow scrolling if needed
@@ -1784,11 +1856,55 @@ function initSpinUI() {
 
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
-                fullscreenBtn.innerHTML = '<i class="ph ph-corners-out"></i> Fullscreen';
+                fullscreenBtn.innerHTML = '<i class="ph ph-corners-out" style="font-size: 1.2rem;"></i>';
                 resultsWrapper.classList.remove('fullscreen-active');
                 resultsWrapper.style.padding = '0';
                 resultsWrapper.style.overflowY = 'visible';
             }
+        });
+    }
+
+    // Fitur Share WhatsApp
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const cards = resultsContainer.querySelectorAll('.group-card');
+            if (cards.length === 0) return;
+
+            let text = "*HASIL PEMBAGIAN KELOMPOK*\n\n";
+            cards.forEach(card => {
+                // Ambil nama kelompok (misal: Kelompok 1) tanpa teks jumlah orang
+                const headerText = card.querySelector('.group-card-header').innerText.split('\n')[0];
+                const countText = card.querySelector('.group-card-count').innerText;
+                
+                text += `*${headerText}* (${countText})\n`;
+                
+                const items = card.querySelectorAll('li');
+                items.forEach((item, index) => {
+                    text += `${index + 1}. ${item.innerText}\n`;
+                });
+                text += "\n";
+            });
+            
+            text += "_Dibuat dengan F.AGRIELLA_";
+
+            // Coba Share Native (Video + Teks) jika didukung browser HP
+            if (recordedBlob && navigator.share) {
+                try {
+                    const ext = recordedBlob.type.includes('mp4') ? 'mp4' : 'webm';
+                    const file = new File([recordedBlob], `undi-kelompok.${ext}`, { type: recordedBlob.type });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Hasil Undian',
+                            text: text
+                        });
+                        return; // Jika berhasil share native, jangan buka wa.me
+                    }
+                } catch (e) { console.log("Share native gagal, fallback ke link WA", e); }
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         });
     }
 
@@ -1817,6 +1933,26 @@ function initSpinUI() {
         // 2. Mulai Animasi Pengacakan
         isSpinning = true;
         btnSpin.style.cursor = 'not-allowed';
+
+        // --- MULAI REKAM VIDEO ---
+        recordedChunks = [];
+        recordedBlob = null;
+        const canvas = document.getElementById('spin-canvas');
+        if (canvas && typeof canvas.captureStream === 'function') {
+            try {
+                const stream = canvas.captureStream(30); // 30 FPS
+                const mimeTypes = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'];
+                const mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+                if (mimeType) {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                    mediaRecorder.onstop = () => { recordedBlob = new Blob(recordedChunks, { type: mimeType }); };
+                    mediaRecorder.start();
+                }
+            } catch (e) { console.error("Gagal merekam:", e); }
+        }
+        // -------------------------
+
         resultsContainer.innerHTML = ''; // Bersihkan hasil sebelumnya
 
         // Animasi memperbesar roda dan menyembunyikan panel lain
@@ -1837,8 +1973,9 @@ function initSpinUI() {
         setTimeout(() => btnSpin.style.display = 'none', 300);
 
         if (spinDisplay) {
-            spinDisplay.style.width = '400px';
-            spinDisplay.style.height = '400px';
+            const size = window.innerWidth < 500 ? '280px' : '400px';
+            spinDisplay.style.width = size;
+            spinDisplay.style.height = size;
             spinDisplay.style.borderWidth = '8px';
         }
 
@@ -1854,13 +1991,12 @@ function initSpinUI() {
         let initialHTML = '';
         for (let i = 0; i < numGroups; i++) {
             initialHTML += `
-                <div class="group-card" id="group-card-${i}" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);">
-                    <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 2px dashed var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div class="group-card" id="group-card-${i}">
+                    <h3 class="group-card-header">
                         Kelompok ${i + 1}
-                        <span id="group-count-${i}" style="font-size: 0.8rem; background: var(--card-bg); padding: 2px 8px; border-radius: 12px; color: var(--text-secondary);">0 Orang</span>
+                        <span id="group-count-${i}" class="group-card-count">0 Orang</span>
                     </h3>
-                    <ol id="group-list-${i}" style="margin: 0; padding-left: 1.2rem; color: var(--text-primary); line-height: 1.6;">
-                    </ol>
+                    <ol id="group-list-${i}" class="group-card-list"></ol>
                 </div>
             `;
         }
@@ -1869,6 +2005,12 @@ function initSpinUI() {
         function spinSequentialRound() {
             if (remainingNames.length === 0) {
                 isSpinning = false;
+
+                // --- STOP REKAM VIDEO ---
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+
                 if (spinDisplay) {
                     spinDisplay.style.width = '200px';
                     spinDisplay.style.height = '200px';
@@ -1879,7 +2021,36 @@ function initSpinUI() {
                     if (groupInputContainer) { groupInputContainer.style.display = 'block'; void groupInputContainer.offsetWidth; groupInputContainer.style.opacity = '1'; }
                     btnSpin.style.display = 'block'; void btnSpin.offsetWidth; btnSpin.style.opacity = '1'; btnSpin.style.cursor = 'pointer'; btnSpin.innerHTML = 'Acak Ulang';
                     if (fullscreenBtn) fullscreenBtn.style.display = 'block';
+                    if (shareBtn) shareBtn.style.display = 'block';
                 }, 500);
+                return;
+            }
+
+            // Cek Toggle Skip
+            const skipToggle = document.getElementById('skip-animation-toggle');
+            if (skipToggle && skipToggle.checked) {
+                const winnerIndex = Math.floor(Math.random() * remainingNames.length);
+                const winnerName = remainingNames[winnerIndex];
+                remainingNames.splice(winnerIndex, 1);
+
+                if (roundRobinCounter > 0 && roundRobinCounter % numGroups === 0) {
+                    shuffleArray(groupTurnOrder);
+                }
+
+                let activeGroup = groupTurnOrder[roundRobinCounter % numGroups];
+                groups[activeGroup].push(winnerName);
+
+                const listEl = document.getElementById(`group-list-${activeGroup}`);
+                const countEl = document.getElementById(`group-count-${activeGroup}`);
+                if (listEl) {
+                    listEl.innerHTML += `<li>${winnerName}</li>`;
+                    listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
+
+                roundRobinCounter++;
+                drawWheel(remainingNames, currentRotation);
+                setTimeout(spinSequentialRound, 100);
                 return;
             }
 
@@ -1926,7 +2097,7 @@ function initSpinUI() {
                     const listEl = document.getElementById(`group-list-${activeGroup}`);
                     const countEl = document.getElementById(`group-count-${activeGroup}`);
                     if (listEl) {
-                        listEl.innerHTML += `<li style="margin-bottom: 0.25rem;">${winnerName}</li>`;
+                        listEl.innerHTML += `<li>${winnerName}</li>`;
                         listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                     if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
@@ -1954,35 +2125,24 @@ function shuffleArray(array) {
 
 // Logika pembagian & rendering
 function generateAndRenderGroups(names, numGroups, container) {
-    // Acak daftar nama
     const shuffledNames = shuffleArray([...names]);
-
-    // Siapkan wadah kelompok (Array of Arrays)
     const groups = Array.from({ length: numGroups }, () => []);
-
-    // Distribusikan nama satu per satu ke tiap kelompok (Round-robin)
-    // Ini menjamin pembagian paling rata sekalipun jumlah mahasiswa ganjil
     shuffledNames.forEach((name, index) => {
         const groupIndex = index % numGroups;
         groups[groupIndex].push(name);
     });
-
-    // Acak ulang "wadah" kelompok agar sisa anggota tambahan (jika pembagian ganjil)
-    // tidak selalu jatuh secara berurutan di Kelompok 1, Kelompok 2, dst.
     const randomizedGroups = shuffleArray(groups);
-
-    // Render ke layar HTML
     let htmlContent = '';
     randomizedGroups.forEach((groupMembers, i) => {
         const groupNumber = i + 1;
         htmlContent += `
-            <div class="group-card" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);">
-                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 2px dashed var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div class="group-card">
+                <h3 class="group-card-header">
                     Kelompok ${groupNumber}
-                    <span style="font-size: 0.8rem; background: var(--card-bg); padding: 2px 8px; border-radius: 12px; color: var(--text-secondary);">${groupMembers.length} Orang</span>
+                    <span class="group-card-count">${groupMembers.length} Orang</span>
                 </h3>
-                <ol style="margin: 0; padding-left: 1.2rem; color: var(--text-primary); line-height: 1.6;">
-                    ${groupMembers.map(member => `<li style="margin-bottom: 0.25rem;">${member}</li>`).join('')}
+                <ol class="group-card-list">
+                    ${groupMembers.map(member => `<li>${member}</li>`).join('')}
                 </ol>
             </div>
         `;
