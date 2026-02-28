@@ -87,7 +87,7 @@ function initCookieConsent() {
             const inputVal = tokenInput.value.trim();
             if (inputVal.length > 0 && inputVal.length < 3) {
                 if (statusEl) {
-                    statusEl.innerText = '⚠️ Nama Token terlalu pendek.';
+                    statusEl.innerText = 'Nama Token terlalu pendek.';
                     statusEl.style.color = 'var(--accent-color)';
                 }
                 return; // Stop & jangan tutup modal jika error panjang nama
@@ -109,7 +109,7 @@ function initCookieConsent() {
                 // Jika pengecekan gagal, beri status tertolak (opsi bypass: admin)
                 if (!isValidToken && inputVal.toLowerCase() !== 'admin') {
                     if (statusEl) {
-                        statusEl.innerText = '❌ Token Akses ditolak atau tidak terdaftar.';
+                        statusEl.innerText = 'Token Akses ditolak atau tidak terdaftar.';
                         statusEl.style.color = 'var(--accent-color)';
                     }
                     return; // Stop & jangan tutup modal
@@ -119,7 +119,7 @@ function initCookieConsent() {
                 const menuUpload = document.getElementById('menu-upload');
                 if (menuUpload) menuUpload.style.display = 'block';
                 if (statusEl) {
-                    statusEl.innerText = '✅ Otorisasi berhasil disetujui.';
+                    statusEl.innerText = 'Otorisasi berhasil disetujui.';
                     statusEl.style.color = 'green';
                 }
                 shouldDelayClose = true;
@@ -842,7 +842,7 @@ function checkHashRoute() {
         const statusEl = document.getElementById('token-status');
         if (statusEl) {
             if (savedToken) {
-                statusEl.innerText = '✅ Akses Upload Aktif.';
+                statusEl.innerText = 'Akses Upload Aktif.';
                 statusEl.style.color = 'green';
             } else {
                 statusEl.innerText = '';
