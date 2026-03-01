@@ -83,7 +83,12 @@ function initCookieConsent() {
             if (!personalizationToggle.checked) {
                 localStorage.removeItem('theme');
                 localStorage.removeItem('bookmarks');
+                window.history.replaceState("", document.title, window.location.pathname + window.location.search);
                 window.location.reload();
+            } else {
+                if (window.location.hash === '#pengaturan') {
+                    window.history.pushState("", document.title, window.location.pathname + window.location.search);
+                }
             }
         };
 
@@ -205,7 +210,12 @@ async function initData() {
 }
 
 async function refreshData() {
-    console.log("Menyegarkan data dari Google Sheets...");
+    // Lewati penyegaran jika pengguna sedang di halaman Undi Kelompok (mengganggu perputaran roda)
+    if (window.location.hash === '#undi') {
+        return;
+    }
+
+    console.log("Menyegarkan data dari Google Sheets (Latar Belakang)...");
 
     // Dapatkan semester yang sedang aktif dari dropdown
     const semesterSelect = document.getElementById('semester-filter');
@@ -1848,16 +1858,16 @@ function initSpinUI() {
                 // Ambil nama kelompok (misal: Kelompok 1) tanpa teks jumlah orang
                 const headerText = card.querySelector('.group-card-header').innerText.split('\n')[0];
                 const countText = card.querySelector('.group-card-count').innerText;
-                
+
                 text += `*${headerText}* (${countText})\n`;
-                
+
                 const items = card.querySelectorAll('li');
                 items.forEach((item, index) => {
                     text += `${index + 1}. ${item.innerText}\n`;
                 });
                 text += "\n";
             });
-            
+
             text += "_Dibuat dengan F.AGRIELLA_";
 
             // Coba Share Native (Video + Teks) jika didukung browser HP
@@ -1865,7 +1875,7 @@ function initSpinUI() {
                 try {
                     const ext = recordedBlob.type.includes('mp4') ? 'mp4' : 'webm';
                     const file = new File([recordedBlob], `undi-kelompok.${ext}`, { type: recordedBlob.type });
-                    
+
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         await navigator.share({
                             files: [file],
@@ -2006,12 +2016,12 @@ function initSpinUI() {
             if (skipToggle && skipToggle.checked) {
                 const winnerIndex = Math.floor(Math.random() * remainingNames.length);
                 const winnerName = remainingNames[winnerIndex];
-                
+
                 // Hitung rotasi agar menunjuk ke pemenang
                 const sliceAngle = (2 * Math.PI) / remainingNames.length;
                 const pointerAngle = (3 * Math.PI) / 2; // 270 derajat (Atas)
                 currentRotation = pointerAngle - ((winnerIndex + 0.10) * sliceAngle);
-                
+
                 // Gambar roda dengan posisi baru (sebelum nama dihapus)
                 drawWheel(remainingNames, currentRotation);
 
