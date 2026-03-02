@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://fagriella.github.io/sitemap.xml
