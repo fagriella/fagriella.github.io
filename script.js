@@ -1976,7 +1976,7 @@ function initSpinUI() {
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
             const nameLen = names[i].length;
-            const fontSize = Math.max(12, Math.min(24, 28 - nameLen));
+            const fontSize = Math.max(16, Math.min(32, 36 - nameLen));
             ctx.font = 'bold ' + fontSize + 'px sans-serif';
             ctx.shadowColor = 'rgba(0,0,0,0.4)';
             ctx.shadowBlur = 3;
