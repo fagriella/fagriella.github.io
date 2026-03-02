@@ -619,10 +619,6 @@ html[data-theme="dark"] .badge {
         width: auto;
     }
 
-    #notif-toggle {
-        display: none;
-    }
-
     .search-bar {
         width: 40px;
         height: 40px;

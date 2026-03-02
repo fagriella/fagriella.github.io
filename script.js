@@ -1865,6 +1865,7 @@ function parseDateStr(d) {
         dateObj.setHours(23, 59, 59);
     }
 
+    return dateObj;
 }
 
 // ==========================================

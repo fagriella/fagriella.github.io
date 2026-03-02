@@ -1,6 +1,6 @@
 // ================== KONFIGURASI ONESIGNAL ==================
 const ONESIGNAL_APP_ID = "7b989f90-3334-4827-a3cd-b9738e971ab3"; 
-const ONESIGNAL_REST_API_KEY = "os_v2_app_pomj7ebtgrecpi6nxfzy5fy2wmdgamp7srbexk4lixvfzcwakwhgpuoszdlpixxco5uxqcljaaynn2iz4jamlnfpaibjynckwz5ybti";
+const ONESIGNAL_REST_API_KEY = "os_v2_app_pomj7ebtgrecpi6nxfzy5fy2wol4pwrlkvbeidvjw4gmt6acs66xtgvoh6mggc2orqazvatiztpqlommzx3y27n5pgqbbcuttorfswa";
 
 /**
  * Webhook Entry/Endpoint:
