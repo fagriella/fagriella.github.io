@@ -23,23 +23,94 @@
     --radius: 8px;
 }
 
+/* Animasi Transisi Tema (Lingkaran Meluas) */
+/* Animasi putar Fallback (Jika view-transition tidak didukung) */
+@keyframes spinIconFallback {
+    from {
+        transform: rotate(0deg) scale(0.8);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: rotate(360deg) scale(1);
+        opacity: 1;
+    }
+}
+
+.spin-active {
+    display: inline-block;
+    animation: spinIconFallback 0.5s ease-out;
+}
+
+/* Pisahkan icon toggle dari root transition agar bisa melayang di atas efek lingkaran */
+#theme-toggle i {
+    view-transition-name: theme-toggle-icon;
+    display: inline-block;
+}
+
+::view-transition-old(theme-toggle-icon) {
+    animation: spinOut 0.5s ease-in forwards;
+}
+
+::view-transition-new(theme-toggle-icon) {
+    animation: spinIn 0.5s ease-out forwards;
+}
+
+@keyframes spinOut {
+    from {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: rotate(180deg) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes spinIn {
+    from {
+        transform: rotate(-180deg) scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+    }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 9999;
+}
+
 html[data-theme="dark"] {
-    /* Remap variabel fungsional untuk tema gelap (Green-centric) */
-    --bg-color: #101d1a;
-    /* Dark, desaturated green */
-    --card-bg: var(--primary-green);
-    /* #1e3932 */
-    --text-primary: #f0fdf4;
-    /* Almost white mint */
-    --text-secondary: #a7f3d0;
-    /* Light mint green */
-    --brand-color: var(--dark-green);
-    /* #142621 */
-    --accent-color: #f97316;
-    /* Oranye yang lebih cerah untuk aksen */
-    --border-color: #2a4c43;
-    /* Lighter shade of card bg */
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    /* Remap variabel fungsional untuk tema gelap (Lebih netral, elegan, dan gelap) */
+    --bg-color: #121212;
+    /* Latar belakang sangat gelap (hitam keabuan) */
+    --card-bg: #1e1e1e;
+    /* Latar belakang kartu sedikit lebih terang */
+    --text-primary: #f3f4f6;
+    /* Putih pudar yang aman untuk mata */
+    --text-secondary: #9ca3af;
+    /* Abu-abu terang untuk teks sekunder */
+    --brand-color: var(--primary-green);
+    /* Pertahankan identitas brand hijau pada elemen tertentu */
+    --accent-color: var(--accent-orange);
+    /* Oranye yang ada tetap cocok di dark mode */
+    --border-color: #374151;
+    /* Abu-abu perbatasan gelap */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -214,7 +285,7 @@ body {
 }
 
 html[data-theme="dark"] .stat-item {
-    background: #2a4c43;
+    background: #2a2a2a;
 }
 
 .stat-val {
@@ -225,7 +296,7 @@ html[data-theme="dark"] .stat-item {
 }
 
 html[data-theme="dark"] .stat-val {
-    color: var(--accent-color);
+    color: var(--brand-color);
 }
 
 .stat-label {
@@ -306,7 +377,7 @@ html[data-theme="dark"] .stat-val {
 }
 
 html[data-theme="dark"] #semester-filter {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .course-grid {
@@ -345,7 +416,7 @@ html[data-theme="dark"] #semester-filter {
 }
 
 html[data-theme="dark"] .course-tag {
-    background: #2a4c43;
+    background: #374151;
 }
 
 .course-title {
@@ -477,8 +548,8 @@ html[data-theme="dark"] .course-title {
 }
 
 html[data-theme="dark"] .badge {
-    background: #2a4c43;
-    color: var(--text-secondary);
+    background: #374151;
+    color: var(--text-primary);
 }
 
 .close-modal {
@@ -617,7 +688,7 @@ html[data-theme="dark"] .badge {
 }
 
 html[data-theme="dark"] .upload-header h2 {
-    color: var(--text-primary);
+    color: var(--brand-color);
 }
 
 .upload-header p {
@@ -695,7 +766,7 @@ html[data-theme="dark"] .upload-header h2 {
 }
 
 html[data-theme="dark"] .file-preview {
-    color: var(--accent-color);
+    color: var(--brand-color);
 }
 
 .btn-upload {
@@ -1123,7 +1194,8 @@ input:checked+.slider:before {
 }
 
 .undi-settings-panel {
-    display: none; /* Hidden by default, toggled by JS */
+    display: none;
+    /* Hidden by default, toggled by JS */
     position: absolute;
     top: 120%;
     right: 0;
@@ -1205,16 +1277,146 @@ input:checked+.slider:before {
 /* Specific for landscape on small devices */
 @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
     #spin-results {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    /* Pengecilan Kartu Undi di HP Saat Fullscreen aktif */
+    .fullscreen-active .results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .fullscreen-active .group-card {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .fullscreen-active .group-card-header {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .fullscreen-active .group-card-count {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+    }
+
+    .fullscreen-active .group-card-list li {
+        font-size: 0.75rem;
+        padding: 0.3rem 0;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Lebar Fleksibel Ekstrem: Menyusut strictly sesuai nama isi kartu tanpa memmelar */
+    .fullscreen-active #spin-results {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.25rem !important;
+        align-items: stretch !important;
+        /* Tarik tinggi semua kartu biar rata per baris */
+    }
+
+    .fullscreen-active .group-card {
+        padding: 0.3rem 0.5rem !important;
+        /* Sedikit dikecilkan lagi */
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        border: 1px solid var(--border-color) !important;
+        margin-bottom: 0 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .fullscreen-active .group-card-header {
+        font-size: 0.75rem !important;
+        /* Font diturunkan sedikit */
+        color: var(--brand-color) !important;
+        margin-bottom: 0.15rem !important;
+        padding-bottom: 0.15rem !important;
+    }
+
+    .fullscreen-active .group-card-count {
+        font-size: 0.55rem !important;
+        padding: 0 0.2rem !important;
+    }
+
+    .fullscreen-active .group-card-list {
+        padding-left: 1.1rem !important;
+    }
+
+    .fullscreen-active .group-card-list li {
+        font-size: 0.65rem !important;
+        /* Font anggota direndahkan sedikit */
+        padding: 0.15rem 0 !important;
+        margin-bottom: 0 !important;
+        line-height: 1.1 !important;
+    }
+
+    /* Pengecilan Header Hasil Undi di Layar Fullscreen HP */
+    .fullscreen-active #results-header {
+        padding-bottom: 0.15rem !important;
+        margin-bottom: 0.25rem !important;
+        margin-top: 0.5rem !important;
+        /* Kurangi margin atas bawaan bawaan index.html 3rem */
+        align-items: center !important;
+        min-height: auto !important;
+    }
+
+    .fullscreen-active #results-header h3 {
+        font-size: 0.7rem !important;
+        max-width: 65%;
+        line-height: 1.1;
+        margin: 0 !important;
+    }
+
+    .fullscreen-active #results-header .icon-btn {
+        width: 20px !important;
+        height: 20px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .fullscreen-active #results-header .icon-btn i {
+        font-size: 0.7rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #spin-results {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1rem;
         padding: 1rem;
     }
-    .group-card { padding: 1rem; }
-    .group-card-header { font-size: 1rem; }
-    .group-card-list { font-size: 0.9rem; }
+
+    .group-card {
+        padding: 1rem;
+    }
+
+    .group-card-header {
+        font-size: 1rem;
+    }
+
+    .group-card-list {
+        font-size: 0.9rem;
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

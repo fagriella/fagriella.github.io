@@ -115,24 +115,126 @@ function initTheme() {
         icon.classList.replace('ph-moon', 'ph-sun');
     }
 
-    toggleBtn.addEventListener('click', () => {
-        // Gunakan documentElement (<html>) untuk konsistensi dengan skrip inline
+    toggleBtn.addEventListener('click', (e) => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (isDark) {
-            document.documentElement.removeAttribute('data-theme');
-            if (localStorage.getItem('consent_personalization') === 'true') {
-                localStorage.setItem('theme', 'light');
+
+        const toggleTheme = () => {
+            // Animasi putar pada ikon
+            icon.classList.remove('spin-active');
+            void icon.offsetWidth; // Force reflow agar animasi bisa diulang
+            icon.classList.add('spin-active');
+
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                if (localStorage.getItem('consent_personalization') === 'true') {
+                    localStorage.setItem('theme', 'light');
+                }
+                icon.classList.replace('ph-sun', 'ph-moon');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (localStorage.getItem('consent_personalization') === 'true') {
+                    localStorage.setItem('theme', 'dark');
+                }
+                icon.classList.replace('ph-moon', 'ph-sun');
             }
-            icon.classList.replace('ph-sun', 'ph-moon');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            if (localStorage.getItem('consent_personalization') === 'true') {
-                localStorage.setItem('theme', 'dark');
-            }
-            icon.classList.replace('ph-moon', 'ph-sun');
+
+            // Kirim setelan tema baru ke iframe (GAS.html) agar selaras
+            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            broadcastThemeToIframes(newTheme);
+        };
+
+        // Fallback jika browser tidak mendukung View Transitions API
+        if (!document.startViewTransition) {
+            toggleTheme();
+            return;
+        }
+
+        // Dapatkan koordinat klik untuk titik awal lingkaran
+        const x = e.clientX || (e.touches && e.touches[0].clientX) || toggleBtn.getBoundingClientRect().left;
+        const y = e.clientY || (e.touches && e.touches[0].clientY) || toggleBtn.getBoundingClientRect().top;
+
+        // Hitung jarak maksimum ke sudut layar untuk radius akhir
+        const endRadius = Math.hypot(
+            Math.max(x, innerWidth - x),
+            Math.max(y, innerHeight - y)
+        );
+
+        // Mulai transisi
+        const transition = document.startViewTransition(() => {
+            toggleTheme();
+        });
+
+        // Terapkan animasi lingkaran setelah DOM siap
+        transition.ready.then(() => {
+            const clipPath = [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${endRadius}px at ${x}px ${y}px)`
+            ];
+
+            document.documentElement.animate(
+                {
+                    clipPath: clipPath,
+                },
+                {
+                    duration: 500,
+                    easing: 'ease-out',
+                    pseudoElement: '::view-transition-new(root)'
+                }
+            );
+        });
+    });
+}
+
+function broadcastThemeToIframes(theme) {
+    const iframes = [
+        document.getElementById('upload-iframe'),
+        document.getElementById('upload-modal-iframe')
+    ];
+
+    // Broadcast fallback untuk iframe standar
+    iframes.forEach(iframe => {
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'theme', value: theme }, '*');
+        }
+    });
+
+    // Broadcast langsung ke iframe dalam (GAS bersarang) via event.source
+    gasIframeSources.forEach(source => {
+        try {
+            source.postMessage({ type: 'theme', value: theme }, '*');
+        } catch (e) {
+            gasIframeSources.delete(source); // Hapus jika sudah dead/unreachable
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const iframes = ['upload-iframe', 'upload-modal-iframe'];
+    iframes.forEach(id => {
+        const iframe = document.getElementById(id);
+        if (iframe) {
+            iframe.addEventListener('load', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                broadcastThemeToIframes(currentTheme);
+            });
+        }
+    });
+});
+
+// Simpan referensi ke window iframe dalam yang berasal dari GAS (script.googleusercontent.com)
+const gasIframeSources = new Set();
+
+// Dengarkan pesan dari iframe (GAS.html) saat ia meminta tema awal
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'themeRequest') {
+        const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        // Simpan source window untuk komunikasi dua arah yang menembus iframe perantara Google
+        if (event.source) {
+            gasIframeSources.add(event.source);
+            event.source.postMessage({ type: 'theme', value: currentTheme }, '*');
+        }
+    }
+});
 
 // 2. Data Fetching & Parsing
 async function initData() {
@@ -782,6 +884,12 @@ function setupEventListeners() {
         closeMenu();
     });
 
+    document.getElementById('menu-tentang')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.hash = 'tentang';
+        closeMenu();
+    });
+
     document.getElementById('menu-upload')?.addEventListener('click', (e) => {
         e.preventDefault();
         window.location.hash = 'upload';
@@ -853,13 +961,13 @@ function checkHashRoute() {
         if (btn) btn.classList.add('active');
 
         // Kembalikan tampilan utama (Beranda)
-        ['container-arsip-foto', 'container-upload', 'container-undi'].forEach(id => {
+        ['container-arsip-foto', 'container-upload', 'container-undi', 'container-tentang'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         // Tampilkan content-area utama (course list)
-        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi)');
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
         if (mainContent) mainContent.style.display = 'block';
 
         // Tampilkan sidebar kembali
@@ -879,7 +987,8 @@ function checkHashRoute() {
         if (uploadModal) uploadModal.classList.add('active');
         const iframe = document.getElementById('upload-modal-iframe');
         if (iframe && iframe.src === 'about:blank' || iframe.src === window.location.href) {
-            iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec';
+            const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec?theme=' + currentTheme;
         }
     }
     // 3. Rute Pengaturan
@@ -912,13 +1021,13 @@ function checkHashRoute() {
         if (undiBtn) undiBtn.classList.add('active');
 
         // Hide all containers safely, then show undi
-        ['container-arsip-foto', 'container-upload'].forEach(id => {
+        ['container-arsip-foto', 'container-upload', 'container-tentang'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         // Sembunyikan content-area utama (course list)
-        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi)');
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
         if (mainContent) mainContent.style.display = 'none';
 
         // Sembunyikan sidebar dan luaskan grid
@@ -937,17 +1046,74 @@ function checkHashRoute() {
 
         // Swap search bar with undi settings gear in navbar
         if (searchBar) searchBar.style.display = 'none';
-        if (undiSettings) undiSettings.style.display = 'block';
+        if (undiSettings) undiSettings.style.display = 'flex';
 
         // Trigger initialization UI pengacakan
         if (typeof initSpinUI === 'function') initSpinUI();
     }
+    // 6. Rute Tentang
+    else if (hash === 'tentang') {
+        const tentangBtn = document.getElementById('menu-tentang');
+        if (tentangBtn) tentangBtn.classList.add('active');
+
+        // Hide all containers safely, then show tentang
+        ['container-arsip-foto', 'container-upload', 'container-undi'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Sembunyikan content-area utama (course list)
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
+        if (mainContent) mainContent.style.display = 'none';
+
+        // Sembunyikan sidebar dan luaskan grid
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+
+        const mainLayout = document.querySelector('.main-layout');
+        if (mainLayout) mainLayout.style.gridTemplateColumns = '1fr';
+
+        // Tampilkan container Tentang
+        const tentangContainer = document.getElementById('container-tentang');
+        if (tentangContainer) tentangContainer.style.display = 'block';
+
+        const navBrand = document.querySelector('.navbar .logo');
+        if (navBrand) navBrand.innerHTML = '<span class="accent">Tentang</span> Project';
+        if (searchBar) searchBar.style.display = 'none';
+
+        // Load tentang.md info
+        loadTentangContent();
+    }
 }
 
+// Fungsi load Markdown secara sederhana tanpa library eksternal
+async function loadTentangContent() {
+    const contentDiv = document.getElementById('tentang-content');
+    if (contentDiv.dataset.loaded === 'true') return; // Cukup load 1x
 
+    try {
+        const response = await fetch('tentang.md');
+        if (!response.ok) throw new Error('File tidak ditemukan');
+        let text = await response.text();
 
+        // Simple Markdown Parser
+        text = text
+            .replace(/^### (.*$)/gim, '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--brand-color);">$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1 style="color: var(--brand-color); margin-bottom: 1rem;">$1</h1>')
+            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*)\*/gim, '<em>$1</em>')
+            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank' style='color: var(--accent-color); text-decoration: none; font-weight: 600;'>$1</a>")
+            .replace(/\n\n/gim, '</p><p style="margin-bottom: 1rem;">')
+            .replace(/\n- (.*)/gim, '<ul><li style="margin-bottom: 0.5rem;">$1</li></ul>')
+        // .replace(/<\/ul>\s*<ul>/gim, ''); // Merge lists
 
-
+        contentDiv.innerHTML = `<div style="font-size: 1.05rem;"><p>${text}</p></div>`;
+        contentDiv.dataset.loaded = 'true';
+    } catch (error) {
+        contentDiv.innerHTML = '<p style="color:var(--danger); text-align:center;"><i class="ph ph-warning-circle" style="font-size: 2rem;"></i><br>Gagal memuat halaman tentang (tentang.md tidak ditemukan).</p>';
+    }
+}
 function openCourseModal(course) {
     activeCourse = course; // Set active course
     const modal = document.getElementById('material-modal');
@@ -1306,6 +1472,7 @@ function renderModalContent(type) {
 
     // Helper untuk menentukan ikon & warna berdasarkan tipe file
     const getFileIcon = (fileType) => {
+        if (fileType === 'youtube') return { icon: 'ph-youtube-logo', color: '#ff0000' };
         if (fileType === 'pdf') return { icon: 'ph-file-pdf', color: '#ef4444' };
         if (fileType === 'doc' || fileType === 'docx') return { icon: 'ph-file-doc', color: '#2563eb' };
         if (fileType === 'ppt' || fileType === 'pptx') return { icon: 'ph-file-ppt', color: '#f59e0b' };
@@ -1333,8 +1500,19 @@ function renderModalContent(type) {
             // 2. Buat link preview
             let previewLink = downloadLink; // Defaultnya sama dengan link download (untuk gambar, dll)
 
+            // Cek apakah link adalah YouTube
+            if (m.type === 'youtube' || downloadLink.includes('youtube.com') || downloadLink.includes('youtu.be')) {
+                try {
+                    const videoId = downloadLink.includes('youtu.be/')
+                        ? downloadLink.split('youtu.be/')[1].split(/[?#]/)[0]
+                        : new URL(downloadLink).searchParams.get('v');
+                    if (videoId) {
+                        previewLink = `https://www.youtube.com/embed/${videoId}`;
+                    }
+                } catch (e) { /* Abaikan jika URL tidak valid */ }
+            }
             // Cek apakah link adalah Google Drive (agar tidak double viewer)
-            if (downloadLink.includes('drive.google.com') || downloadLink.includes('docs.google.com')) {
+            else if (downloadLink.includes('drive.google.com') || downloadLink.includes('docs.google.com')) {
                 // Ubah /view menjadi /preview agar bisa di-embed di dalam modal
                 previewLink = downloadLink.replace(/\/view.*/, '/preview');
             }
@@ -1523,8 +1701,20 @@ function renderBookmarks(semesterFilter) {
                 let previewLink = b.link;
                 let canPreview = false;
 
+                // 0. Cek YouTube
+                if (b.fileType === 'youtube' || b.link.includes('youtube.com') || b.link.includes('youtu.be')) {
+                    try {
+                        const videoId = b.link.includes('youtu.be/')
+                            ? b.link.split('youtu.be/')[1].split(/[?#]/)[0]
+                            : new URL(b.link).searchParams.get('v');
+                        if (videoId) {
+                            previewLink = `https://www.youtube.com/embed/${videoId}`;
+                            canPreview = true;
+                        }
+                    } catch (e) { /* ignore */ }
+                }
                 // 1. Google Drive
-                if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
+                else if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
                     previewLink = b.link.replace(/\/view.*/, '/preview');
                     canPreview = true;
                 }
@@ -1779,15 +1969,16 @@ function initSpinUI() {
             // Text -- selalu putih agar terbaca di semua warna
             ctx.save();
             ctx.translate(centerX, centerY);
-            ctx.rotate(startAngle + sliceAngle / 2);
-            ctx.textAlign = 'right';
+            // Putar ekstra 180 derajat (Math.PI) agar huruf dimulai dari pinggir luar
+            ctx.rotate(startAngle + sliceAngle / 2 + Math.PI);
+            ctx.textAlign = 'left'; // Rata kiri (mulai dari ujung luar yang sudah diputar)
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 16px sans-serif';
             ctx.shadowColor = 'rgba(0,0,0,0.4)';
             ctx.shadowBlur = 3;
             const text = names[i].length > 18 ? names[i].substring(0, 15) + '...' : names[i];
-            ctx.fillText(text, radius - 20, 0);
+            ctx.fillText(text, -radius + 20, 0); // Posisi negatif karena sudah diputar balik 180 drajat
             ctx.restore();
         }
 
@@ -1917,8 +2108,9 @@ function initSpinUI() {
         isSpinning = true;
         btnSpin.style.cursor = 'not-allowed';
 
-        // Tampilkan area hasil
+        // Tampilkan area hasil dan tombol fullscreen segera
         if (resultsWrapper) resultsWrapper.style.display = 'block';
+        if (fullscreenBtn) fullscreenBtn.style.display = 'block';
 
         // --- MULAI REKAM VIDEO ---
         recordedChunks = [];
@@ -2005,7 +2197,6 @@ function initSpinUI() {
                     if (leftPanel) { leftPanel.style.display = 'block'; void leftPanel.offsetWidth; leftPanel.style.opacity = '1'; leftPanel.style.transform = 'scale(1)'; }
                     if (groupInputContainer) { groupInputContainer.style.display = 'block'; void groupInputContainer.offsetWidth; groupInputContainer.style.opacity = '1'; }
                     btnSpin.style.display = 'block'; void btnSpin.offsetWidth; btnSpin.style.opacity = '1'; btnSpin.style.cursor = 'pointer'; btnSpin.innerHTML = 'Acak Ulang';
-                    if (fullscreenBtn) fullscreenBtn.style.display = 'block';
                     if (shareBtn) shareBtn.style.display = 'block';
                 }, 500);
                 return;
