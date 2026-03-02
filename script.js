@@ -1975,10 +1975,13 @@ function initSpinUI() {
             ctx.textAlign = 'left'; // Rata kiri (mulai dari ujung luar yang sudah diputar)
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px sans-serif';
+            const nameLen = names[i].length;
+            const fontSize = Math.max(12, Math.min(24, 28 - nameLen));
+            ctx.font = 'bold ' + fontSize + 'px sans-serif';
             ctx.shadowColor = 'rgba(0,0,0,0.4)';
             ctx.shadowBlur = 3;
-            const text = names[i].length > 18 ? names[i].substring(0, 15) + '...' : names[i];
+            const maxChars = Math.floor(radius / (fontSize * 0.55));
+            const text = nameLen > maxChars ? names[i].substring(0, maxChars - 2) + '..' : names[i];
             ctx.fillText(text, -radius + 20, 0); // Posisi negatif karena sudah diputar balik 180 drajat
             ctx.restore();
         }
