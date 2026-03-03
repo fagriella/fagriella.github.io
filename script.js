@@ -1512,6 +1512,9 @@ function renderModalContent(type) {
             return;
         }
 
+        // Urutkan file secara natural (angka diurutkan sebagai angka, bukan teks)
+        docs.sort((a, b) => a.filename.localeCompare(b.filename, 'id', { numeric: true, sensitivity: 'base' }));
+
         fileContainer.innerHTML = docs.map(m => {
             const { icon, color } = getFileIcon(m.type);
             const dateObj = parseDateStr(m.date) || new Date(m.date);
