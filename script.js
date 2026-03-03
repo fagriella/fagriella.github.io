@@ -1496,6 +1496,7 @@ function renderModalContent(type) {
         return dateB - dateA;
     });
 
+
     // Helper untuk menentukan ikon & warna berdasarkan tipe file
     const getFileIcon = (fileType) => {
         if (fileType === 'youtube') return { icon: 'ph-youtube-logo', color: '#ff0000' };
@@ -1578,6 +1579,9 @@ function renderModalContent(type) {
                     </div>
                 </a>
                 <div style="display: flex; align-items: center;">
+                    <button onclick="copyShortLink('${downloadLink}', this)" class="list-bookmark-btn" title="Copy Short Link">
+                        <i class="ph ph-link"></i>
+                    </button>
                     <a href="${downloadLink}" target="_blank" download class="list-bookmark-btn" title="Download">
                         <i class="ph ph-download-simple"></i>
                     </a>
@@ -1645,6 +1649,33 @@ function renderModalContent(type) {
 }
 
 // 6. Bookmark Logic
+// Helper untuk menghasilkan short link dari URL Google Drive/Docs
+function generateShortLink(url) {
+    const origin = window.location.origin;
+    // Google Drive file: /d/FILE_ID/
+    var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) {
+        if (url.includes('presentation')) return origin + '/s/#p:' + match[1];
+        if (url.includes('spreadsheets')) return origin + '/s/#s:' + match[1];
+        if (url.includes('document')) return origin + '/s/#d:' + match[1];
+        return origin + '/s/#' + match[1];
+    }
+    // Fallback: encode full URL
+    return origin + '/s/#' + encodeURIComponent(url);
+}
+
+function copyShortLink(url, btn) {
+    var short = generateShortLink(url);
+    navigator.clipboard.writeText(short).then(function () {
+        var icon = btn.querySelector('i');
+        if (icon) { icon.className = 'ph ph-check'; }
+        setTimeout(function () { if (icon) icon.className = 'ph ph-link'; }, 1500);
+    }).catch(function () {
+        // Fallback jika clipboard API tidak tersedia
+        prompt('Copy link ini:', short);
+    });
+}
+
 function isBookmarked(id) {
     return bookmarks.some(b => b.id === id);
 }
