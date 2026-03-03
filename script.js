@@ -242,6 +242,9 @@ window.addEventListener('message', (event) => {
             gasIframeSources.add(event.source);
             event.source.postMessage({ type: 'theme', value: currentTheme }, '*');
         }
+    } else if (event.data && event.data.type === 'refresh') {
+        // Reload halaman setelah upload/delete berhasil di iframe
+        window.location.reload();
     }
 });
 
