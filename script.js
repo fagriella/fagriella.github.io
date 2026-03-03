@@ -1538,10 +1538,18 @@ function renderModalContent(type) {
                     }
                 } catch (e) { /* Abaikan jika URL tidak valid */ }
             }
-            // Cek apakah link adalah Google Drive (agar tidak double viewer)
+            // Cek apakah link adalah Google Drive
             else if (downloadLink.includes('drive.google.com') || downloadLink.includes('docs.google.com')) {
-                // Ubah /view menjadi /preview agar bisa di-embed di dalam modal
-                previewLink = downloadLink.replace(/\/view.*/, '/preview');
+                // Extract file ID dari URL Google Drive
+                const driveIdMatch = downloadLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (driveIdMatch) {
+                    const fileId = driveIdMatch[1];
+                    // Gunakan export link untuk preview tanpa login
+                    const exportUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                    previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(exportUrl)}&embedded=true`;
+                } else {
+                    previewLink = downloadLink.replace(/\/view.*/, '/preview');
+                }
             }
             // Jika file office atau PDF biasa (Direct Link), bungkus dengan Google Docs Viewer
             else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pdf'].includes(m.type)) {
