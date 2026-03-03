@@ -721,7 +721,7 @@ function setupEventListeners() {
     if (notifSettingsBtn) {
         notifSettingsBtn.addEventListener('click', () => {
             window.OneSignalDeferred.push(async function (OneSignal) {
-                const permission = await OneSignal.getNotificationPermission();
+                const permission = Notification.permission; // browser native: 'granted', 'denied', 'default'
                 const isSubscribed = OneSignal.User.PushSubscription.optedIn;
 
                 let statusMessage = 'Status Langganan: ' + (isSubscribed ? 'Terdaftar' : 'Belum Terdaftar') + '\n';

@@ -611,6 +611,10 @@ html[data-theme="dark"] .badge {
 }
 
 @media (max-width: 768px) {
+    #notif-toggle {
+        display: none;
+    }
+
     .nav-container {
         flex-direction: row;
     }
