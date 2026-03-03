@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initCookieConsent() {
     const banner = document.getElementById('cookie-consent-banner');
     const acceptAllBtn = document.getElementById('accept-cookie-btn');
+    const rejectBtn = document.getElementById('reject-cookie-btn');
     const manageBtn = document.getElementById('manage-cookies-btn');
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
@@ -50,7 +51,8 @@ function initCookieConsent() {
     if (!banner) return;
 
     const showBanner = () => {
-        if (localStorage.getItem('cookieConsent') !== 'true') {
+        const consent = localStorage.getItem('cookieConsent');
+        if (!consent) {
             banner.classList.add('show');
         }
     };
@@ -68,6 +70,12 @@ function initCookieConsent() {
     const acceptAll = () => {
         localStorage.setItem('cookieConsent', 'true');
         localStorage.setItem('consent_personalization', 'true');
+        hideBanner();
+    };
+
+    const rejectAll = () => {
+        localStorage.setItem('cookieConsent', 'rejected');
+        localStorage.setItem('consent_personalization', 'false');
         hideBanner();
     };
 
@@ -97,6 +105,7 @@ function initCookieConsent() {
 
     // Event Listeners
     acceptAllBtn.addEventListener('click', acceptAll);
+    if (rejectBtn) rejectBtn.addEventListener('click', rejectAll);
     manageBtn.addEventListener('click', openSettingsModal);
     savePrefsBtn.addEventListener('click', savePreferences);
     setTimeout(() => {
