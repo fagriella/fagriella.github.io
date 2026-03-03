@@ -579,7 +579,7 @@ function openAssignmentModal(encodedData) {
                     
                     <div style="margin-top: 0.5rem; text-align: right;">
                         <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0, 20)}...', 'Deadline: ${t.deadline}', null, 'tugas', event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i class="ph ${isBookmarked(generateId(t)) ? 'ph-star-fill' : 'ph-star'}" 
+                            <i class="${isBookmarked(generateId(t)) ? 'ph-fill' : 'ph'} ph-star" 
                                style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}; font-size: 1.2rem;"></i>
                             <span style="font-size: 0.9rem; color: var(--text-secondary);">Simpan Tugas</span>
                         </button>
@@ -1442,7 +1442,7 @@ function openGlobalPhotoArchive(targetSem = null, targetMk = null) {
                                 </div>
                             </a>
                             <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${m.course}', '${fileLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
-                                <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
+                                <i class="${bookmarked ? 'ph-fill' : 'ph'} ph-star" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
                             </button>
                         </div>`;
                 });
@@ -1572,7 +1572,7 @@ function renderModalContent(type) {
                         <i class="ph ph-download-simple"></i>
                     </a>
                     <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${downloadLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan">
-                        <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'var(--text-secondary)'}"></i>
+                        <i class="${bookmarked ? 'ph-fill' : 'ph'} ph-star" style="color: ${bookmarked ? 'var(--accent-color)' : 'var(--text-secondary)'}"></i>
                     </button>
                 </div>
             </div>
@@ -1624,7 +1624,7 @@ function renderModalContent(type) {
                             </div>
                         </a>
                         <button onclick="toggleBookmark('${itemId}', 'materi', '${m.filename.replace(/'/g, "\\'")}', '${course.name}', '${fileLink}', '${m.type}', event)" class="list-bookmark-btn" title="Simpan" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.4); border-radius: 50%; color: white; height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;">
-                            <i class="ph ${bookmarked ? 'ph-star-fill' : 'ph-star'}" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
+                            <i class="${bookmarked ? 'ph-fill' : 'ph'} ph-star" style="color: ${bookmarked ? 'var(--accent-color)' : 'white'};"></i>
                         </button>
                     </div>
                     `;
@@ -1665,12 +1665,12 @@ function toggleBookmark(id, type, title, subtitle, link, fileType, event) {
         if (icon) {
             const isPhoto = ['image', 'jpg', 'png', 'jpeg'].includes(fileType);
             if (isNowBookmarked) {
-                icon.classList.remove('ph-star');
-                icon.classList.add('ph-star-fill');
+                icon.classList.remove('ph');
+                icon.classList.add('ph-fill');
                 icon.style.color = 'var(--accent-color)';
             } else {
-                icon.classList.remove('ph-star-fill');
-                icon.classList.add('ph-star');
+                icon.classList.remove('ph-fill');
+                icon.classList.add('ph');
                 // Foto memiliki warna ikon non-aktif yang berbeda (putih)
                 icon.style.color = isPhoto ? 'white' : 'var(--text-secondary)';
             }
@@ -1769,7 +1769,7 @@ function renderBookmarks(semesterFilter) {
                     <a href="${href}" ${target} ${onclick} style="display: block; text-decoration: none; color: var(--text-primary);">
                         <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 2px;">${b.title}</div>
                         <div style="font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:4px;">
-                            <i class="ph ph-star-fill" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
+                            <i class="ph-fill ph-star" style="color: var(--accent-color);"></i> ${b.subtitle || ''}
                         </div>
                     </a>
                 </li>
