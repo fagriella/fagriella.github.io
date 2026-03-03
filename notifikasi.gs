@@ -71,10 +71,10 @@ function scheduleDeadlineNotification(course, taskDetail, deadlineStr) {
     app_id: ONESIGNAL_APP_ID,
     included_segments: ["Subscribed Users"], // Anda bisa mengatur label segmen "Semua Orang" 
     headings: {
-      "en": "🔔 Pengingat Tugas: " + course
+      "en": "Pengingat Tugas: " + course
     },
     contents: {
-      "en": "Ada tugas pending: " + taskDetail + "\n⏳ Deadline: " + Utilities.formatDate(dlDate, "Asia/Jakarta", "dd MMM yyyy HH:mm") + " WIB"
+      "en": "Ada tugas pending: " + taskDetail + "\nDeadline: " + Utilities.formatDate(dlDate, "Asia/Jakarta", "dd MMM yyyy HH:mm") + " WIB"
     }
   };
 
@@ -158,18 +158,18 @@ function checkAndSendReminders() {
       const course = row[courseCol] || "Mata Kuliah";
       const desc = descCol !== -1 ? (row[descCol] || "Ada tugas!") : "Ada tugas!";
 
-      Logger.log("📌 Kirim pengingat: " + course + " - " + desc + " (DL: " + deadlineRaw + ")");
+      Logger.log("Kirim pengingat: " + course + " - " + desc + " (DL: " + deadlineRaw + ")");
 
       try {
         scheduleDeadlineNotification(course, desc, dlDate.toISOString());
         sentCount++;
       } catch (e) {
-        Logger.log("❌ Gagal kirim untuk " + course + ": " + e.message);
+        Logger.log("Gagal kirim untuk " + course + ": " + e.message);
       }
     }
   }
 
-  Logger.log("✅ Selesai. Total pengingat terkirim: " + sentCount);
+  Logger.log("Selesai. Total pengingat terkirim: " + sentCount);
 }
 
 /**
@@ -226,7 +226,7 @@ function setupDailyTrigger() {
     .inTimezone('Asia/Jakarta')
     .create();
 
-  Logger.log("✅ Trigger harian 'checkAndSendReminders' terpasang (07:00 WIB)");
+  Logger.log("Trigger harian 'checkAndSendReminders' terpasang (07:00 WIB)");
 }
 
 /**

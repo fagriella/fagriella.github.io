@@ -6,12 +6,12 @@ Panduan ini menjelaskan tata cara pengumpulan berbagai jenis arsip melalui formu
 1. Buka website portal kelas.
 2. Buka menu **Pengaturan/Privasi** yang ada di navigasi bawah (ikon roket/gear).
 3. Masukkan **Token Akses PJ** yang sah di kotak yang tersedia.
-4. Jika token benar, akan muncul tulisan **"✅ Akses Upload Aktif"** berwarna hijau, dan menu **"Upload Materi"** akan muncul di navigasi kiri (Sidebar).
-5. Klik menu **"⭕ Upload Materi"** tersebut untuk membuka formulir.
+4. Jika token benar, akan muncul tulisan **"Akses Upload Aktif"** berwarna hijau, dan menu **"Upload Materi"** akan muncul di navigasi kiri (Sidebar).
+5. Klik menu **"Upload Materi"** tersebut untuk membuka formulir.
 
 ---
 
-## 📚 1. Mengunggah MATERI Perkuliahan
+## 1. Mengunggah MATERI Perkuliahan
 Digunakan untuk mendistribusikan salinan presentasi materi seperti `PPT`, `PDF`, atau `DOCX`.
 1. **Jenis Arsip:** Pilih `Materi Perkuliahan`.
 2. **Semester & Mata Kuliah:** Pilih sesuai jadwal materi yang diajarkan.
@@ -21,7 +21,7 @@ Digunakan untuk mendistribusikan salinan presentasi materi seperti `PPT`, `PDF`,
 
 ---
 
-## 📸 2. Mengunggah FOTO Dokumentasi
+## 2. Mengunggah FOTO Dokumentasi
 Digunakan untuk mengarsipkan foto papan tulis, foto kelompok presentasi, ataupun dokumentasi kegiatan kuliah.
 1. **Jenis Arsip:** Pilih `Foto Dokumentasi`.
 2. **Semester & Album:** Pilih Mata Kuliah yang relevan (akan bertindak sebagai "Folder Album" foto tersebut).
@@ -30,7 +30,7 @@ Digunakan untuk mengarsipkan foto papan tulis, foto kelompok presentasi, ataupun
 
 ---
 
-## 📝 3. Memberikan TUGAS Kuliah
+## 3. Memberikan TUGAS Kuliah
 Digunakan untuk mengumumkan tugas baru kepada seluruh mahasiswa secara serentak.
 1. **Jenis Arsip:** Pilih `Tugas Kuliah`.
 2. Saat opsi ini dipilih, akan otomatis muncul **Kolom Detail Tugas Tambahan**. Isi dengan lengkap:
@@ -46,26 +46,26 @@ Digunakan untuk mengumumkan tugas baru kepada seluruh mahasiswa secara serentak.
 <hr>
 <br>
 
-# 📱 Panduan Singkat (Versi WhatsApp / Chat Group)
+# Panduan Singkat (Versi WhatsApp / Chat Group)
 
 *Assalamu'alaikum/Selamat Pagi Rekan-Rekan PJ,*
 
 *Berikut adalah panduan ringkas cara pakai sistem "Upload Terpadu" di Web Kelas kita. Formulir upload yang baru sekarang 100% otomatis, jadi pastikan kalian membaca ini ya!*
 
-📌 **Langkah Akses:**
+**Langkah Akses:**
 1. Masuk web kelas kita.
 2. Ke menu **Pengaturan** (ikon pojok kanan bawah), lalu ketik **Token PJ** kalian di situ agar panel **"Upload Materi"** terbuka di menu samping.
 
-📌 **Cara Pakainya Gampang!**
+**Cara Pakainya Gampang!**
 Di dalam formulir upload itu, kalian cuma perlu **pilih tab "JENIS ARSIP"** di paling atas:
 
-📚 **Pilih "MATERI":** Jika cuma mau nitip file PPT/PDF presentasi kelompok/dosen hari ini. Upload file-nya, beres. Wajib ada filenya ya!
-📸 **Pilih "FOTO":** Jika mau upload foto papan tulis/dokumentasi. Masukkan gambarnya, nanti sistem kita yang urus agar rapi masuk ke folder album arsip foto masing-masing Matkul.
-📝 **Pilih "TUGAS":** *(Nah ini yang paling canggih)*
+**Pilih "MATERI":** Jika cuma mau nitip file PPT/PDF presentasi kelompok/dosen hari ini. Upload file-nya, beres. Wajib ada filenya ya!
+**Pilih "FOTO":** Jika mau upload foto papan tulis/dokumentasi. Masukkan gambarnya, nanti sistem kita yang urus agar rapi masuk ke folder album arsip foto masing-masing Matkul.
+**Pilih "TUGAS":** *(Nah ini yang paling canggih)*
 Kalau kalian bawa titipan PR dari dosen, pilih ini! Nanti bakal otomatis muncul *form* tambahan buat ngisi **Tenggat Waktu (Deadline), Info Dosen, dan Deskripsi Tugasnya**. 
 *Kerennya, ngisi form ini nggak perlu repot nyari file lampiran kalau memang tugasnya cuma disuruh baca LKS. Kosongin aja kotak file-nya gak masalah!*
 
-🚨 **PERHATIAN KHUSUS TUGAS:**
+**PERHATIAN KHUSUS TUGAS:**
 Begitu kalian tekan "Kirim", **SERVER AKAN OTOMATIS MENGUNCI JADWAL DEADLINE TERSEBUT & MENGIRIM KAN NOTIFIKASI ALARM KE SELURUH HP MAHASISWA SATU KELAS** layaknya alarm sahur! Jadi, pastikan kalian tidak salah masukin jam *Deadline*-nya ya!
 
 *Gasskeun, mari kita buat kuliah online ini makin modern! Kalau ada error, segera kabarin admin.*
