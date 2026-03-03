@@ -730,34 +730,14 @@ function setupEventListeners() {
                 if (isSubscribed) {
                     const sendTest = confirm(statusMessage + '\n\nNotifikasi aktif.\nKlik OK untuk mengirim notifikasi test ke perangkat ini.');
                     if (sendTest) {
-                        OneSignal.Notifications.requestPermission();
-                        const subId = OneSignal.User.PushSubscription.id;
-                        if (subId) {
-                            try {
-                                const res = await fetch('https://api.onesignal.com/notifications', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': 'key os_v2_app_pomj7ebtgrecpi6nxfzy5fy2wmsi4mp2k6duwcn22rvyyrgbreqc55t4yctweceezr4kjfc5ejewxp3tx43bfmjratdisadeclbzhvy'
-                                    },
-                                    body: JSON.stringify({
-                                        app_id: '7b989f90-3334-4827-a3cd-b9738e971ab3',
-                                        include_subscription_ids: [subId],
-                                        headings: { en: 'Test Notifikasi' },
-                                        contents: { en: 'Notifikasi berhasil! Kamu akan menerima pengingat tugas di perangkat ini.' }
-                                    })
-                                });
-                                const data = await res.json();
-                                if (data.id) {
-                                    alert('Notifikasi test terkirim! Cek notifikasi di perangkat kamu.');
-                                } else {
-                                    alert('Gagal mengirim: ' + JSON.stringify(data.errors || data));
-                                }
-                            } catch (e) {
-                                alert('Error: ' + e.message);
-                            }
-                        } else {
-                            alert('Subscription ID tidak ditemukan. Coba refresh halaman.');
+                        try {
+                            new Notification('Test Notifikasi - F.AGRIELLA', {
+                                body: 'Notifikasi berhasil! Kamu akan menerima pengingat tugas di perangkat ini.',
+                                icon: '/images/logo/F.AGRIELLA.webp'
+                            });
+                            alert('Notifikasi test terkirim! Cek notifikasi di perangkat kamu.');
+                        } catch (e) {
+                            alert('Gagal mengirim test: ' + e.message);
                         }
                     }
                 } else if (permission === 'denied') {
