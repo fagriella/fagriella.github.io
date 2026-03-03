@@ -715,15 +715,19 @@ function setupEventListeners() {
                 const permission = await OneSignal.getNotificationPermission();
                 const isSubscribed = OneSignal.User.PushSubscription.optedIn;
 
-                let statusMessage = `Status Langganan: ${isSubscribed ? 'Terdaftar' : 'Belum Terdaftar'}\n`;
-                statusMessage += `Izin Browser: ${permission.toUpperCase()}`;
+                let statusMessage = 'Status Langganan: ' + (isSubscribed ? 'Terdaftar' : 'Belum Terdaftar') + '\n';
+                statusMessage += 'Izin Browser: ' + permission.toUpperCase();
 
                 if (isSubscribed) {
-                    alert(statusMessage);
+                    alert(statusMessage + '\n\nNotifikasi aktif. Kamu akan menerima pengingat tugas.');
                 } else if (permission === 'denied') {
-                    alert(statusMessage + "\n\nNotifikasi diblokir. Harap reset izin notifikasi di pengaturan situs.");
+                    alert(statusMessage + '\n\nNotifikasi diblokir oleh browser. Untuk mengaktifkan:\n1. Klik ikon gembok di address bar\n2. Cari "Notifications" atau "Notifikasi"\n3. Ubah ke "Allow" / "Izinkan"\n4. Refresh halaman');
                 } else {
-                    await OneSignal.User.PushSubscription.optIn();
+                    const confirm_ = confirm(statusMessage + '\n\nKamu belum berlangganan notifikasi.\nKlik OK untuk mengaktifkan notifikasi pengingat tugas.');
+                    if (confirm_) {
+                        await OneSignal.User.PushSubscription.optIn();
+                        alert('Notifikasi berhasil diaktifkan! Kamu akan menerima pengingat tugas.');
+                    }
                 }
             });
         });
