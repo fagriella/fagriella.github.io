@@ -1007,6 +1007,8 @@ function checkHashRoute() {
         const uploadBtn = document.getElementById('menu-upload');
         if (uploadBtn) uploadBtn.classList.add('active');
 
+        if (searchBar) searchBar.style.display = 'none';
+
         const uploadModal = document.getElementById('upload-modal');
         if (uploadModal) uploadModal.classList.add('active');
         const iframe = document.getElementById('upload-modal-iframe');
