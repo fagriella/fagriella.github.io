@@ -243,8 +243,22 @@ window.addEventListener('message', (event) => {
             event.source.postMessage({ type: 'theme', value: currentTheme }, '*');
         }
     } else if (event.data && event.data.type === 'refresh') {
-        // Reload halaman setelah upload/delete berhasil di iframe
-        window.location.reload();
+        // Memicu autosinkronisasi sebelum merefresh halaman secara paksa
+        if (SYNC_SCRIPT_URL && SYNC_SCRIPT_URL !== 'MASUKKAN_URL_WEB_APP_DISINI') {
+            console.log("Triggering forced sync before refresh...");
+            fetch(SYNC_SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Forced Sync Complete:", data);
+                    window.location.reload();
+                })
+                .catch(err => {
+                    console.error("Forced Sync Error:", err);
+                    window.location.reload(); // Tetap refresh meski gagal
+                });
+        } else {
+            window.location.reload();
+        }
     }
 });
 
