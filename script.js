@@ -1085,7 +1085,7 @@ function checkHashRoute() {
         if (undiContainer) undiContainer.style.display = 'block';
 
         const navBrand = document.querySelector('.navbar .logo');
-        if (navBrand) navBrand.innerHTML = '<span class="accent">Undi</span> Kelompok';
+        if (navBrand) navBrand.innerHTML = '<span class="accent">Spi</span>n';
 
         // Swap search bar with undi settings gear in navbar
         if (searchBar) searchBar.style.display = 'none';
@@ -1972,16 +1972,28 @@ function initSpinUI() {
     const resultsWrapper = document.getElementById('spin-results-wrapper');
     const leftPanel = document.getElementById('spin-left-panel');
     const groupInputContainer = document.getElementById('spin-group-input-container');
+    const winnerInputContainer = document.getElementById('spin-winner-input-container');
     const durationInput = document.getElementById('spin-duration-input');
-
-    // Variabel untuk perekaman video
-    let mediaRecorder;
-    let recordedChunks = [];
-    let recordedBlob = null;
+    const modeRadios = document.querySelectorAll('input[name="spin-mode"]');
 
     // Mencegah multiple binding jika fungsi dipanggil ulang oleh router
     if (btnSpin.dataset.bound) return;
     btnSpin.dataset.bound = "true";
+
+    // Handle Toggle Mode
+    if (modeRadios.length > 0) {
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'urutan') {
+                    if (groupInputContainer) groupInputContainer.style.display = 'none';
+                    if (winnerInputContainer) winnerInputContainer.style.display = 'block';
+                } else {
+                    if (groupInputContainer) groupInputContainer.style.display = 'block';
+                    if (winnerInputContainer) winnerInputContainer.style.display = 'none';
+                }
+            });
+        });
+    }
 
     // Add click-to-stop listener to the wheel display
     if (spinDisplay) {
@@ -2182,15 +2194,33 @@ function initSpinUI() {
             return;
         }
 
-        const numGroups = parseInt(groupInput.value, 10);
-        if (isNaN(numGroups) || numGroups < 1) {
-            alert("Masukkan jumlah kelompok yang valid.");
-            return;
-        }
+        const spinMode = document.querySelector('input[name="spin-mode"]:checked')?.value || 'kelompok';
+        let numGroups = 1;
+        let maxWinners = namesList.length;
 
-        if (numGroups > namesList.length) {
-            alert(`Jumlah kelompok (${numGroups}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
-            return;
+        if (spinMode === 'kelompok') {
+            numGroups = parseInt(groupInput.value, 10);
+            if (isNaN(numGroups) || numGroups < 1) {
+                alert("Masukkan jumlah kelompok yang valid.");
+                return;
+            }
+            if (numGroups > namesList.length) {
+                alert(`Jumlah kelompok (${numGroups}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
+                return;
+            }
+        } else {
+            const winnerInput = document.getElementById('spin-winners');
+            if (winnerInput) {
+                maxWinners = parseInt(winnerInput.value, 10);
+                if (isNaN(maxWinners) || maxWinners < 1) {
+                    alert("Masukkan jumlah orang terpilih yang valid.");
+                    return;
+                }
+                if (maxWinners > namesList.length) {
+                    alert(`Jumlah terpilih (${maxWinners}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
+                    return;
+                }
+            }
         }
 
         // 2. Mulai Animasi Pengacakan
@@ -2231,9 +2261,23 @@ function initSpinUI() {
             leftPanel.style.transform = 'scale(0.9)';
             setTimeout(() => leftPanel.style.display = 'none', 300);
         }
+
+        // Sembunyikan mode pilihan juga
+        const modeContainer = document.getElementById('spin-mode-container');
+        if (modeContainer) {
+            modeContainer.style.opacity = '0';
+            setTimeout(() => modeContainer.style.display = 'none', 300);
+        }
+
         if (groupInputContainer) {
             groupInputContainer.style.opacity = '0';
             setTimeout(() => groupInputContainer.style.display = 'none', 300);
+        }
+
+        const winnerInputContainer = document.getElementById('spin-winner-input-container');
+        if (winnerInputContainer) {
+            winnerInputContainer.style.opacity = '0';
+            setTimeout(() => winnerInputContainer.style.display = 'none', 300);
         }
         btnSpin.style.opacity = '0';
         setTimeout(() => btnSpin.style.display = 'none', 300);
@@ -2255,11 +2299,14 @@ function initSpinUI() {
 
         // Munculkan kontainer kotak kelompok kosong terlebih dahulu
         let initialHTML = '';
+        const spinModeCheck = document.querySelector('input[name="spin-mode"]:checked')?.value || 'kelompok';
+
         for (let i = 0; i < numGroups; i++) {
+            const groupTitle = spinModeCheck === 'urutan' ? 'Daftar Urutan Terpilih' : `Kelompok ${i + 1}`;
             initialHTML += `
                 <div class="group-card" id="group-card-${i}">
                     <h3 class="group-card-header">
-                        Kelompok ${i + 1}
+                        ${groupTitle}
                         <span id="group-count-${i}" class="group-card-count">0 Orang</span>
                     </h3>
                     <ol id="group-list-${i}" class="group-card-list"></ol>
@@ -2268,8 +2315,10 @@ function initSpinUI() {
         }
         resultsContainer.innerHTML = initialHTML;
 
+        let currentDrawCount = 0;
+
         function spinSequentialRound() {
-            if (remainingNames.length === 0) {
+            if (remainingNames.length === 0 || currentDrawCount >= maxWinners) {
                 isSpinning = false;
 
                 // --- STOP REKAM VIDEO ---
@@ -2284,8 +2333,20 @@ function initSpinUI() {
                 }
                 setTimeout(() => {
                     if (leftPanel) { leftPanel.style.display = 'block'; void leftPanel.offsetWidth; leftPanel.style.opacity = '1'; leftPanel.style.transform = 'scale(1)'; }
-                    if (groupInputContainer) { groupInputContainer.style.display = 'block'; void groupInputContainer.offsetWidth; groupInputContainer.style.opacity = '1'; }
+
+                    const modeCheck = document.querySelector('input[name="spin-mode"]:checked')?.value;
+                    if (groupInputContainer && modeCheck !== 'urutan') {
+                        groupInputContainer.style.display = 'block';
+                        void groupInputContainer.offsetWidth;
+                        groupInputContainer.style.opacity = '1';
+                    }
+
                     btnSpin.style.display = 'block'; void btnSpin.offsetWidth; btnSpin.style.opacity = '1'; btnSpin.style.cursor = 'pointer'; btnSpin.innerHTML = 'Acak Ulang';
+                    if (modeContainer) {
+                        modeContainer.style.display = 'flex';
+                        void modeContainer.offsetWidth;
+                        modeContainer.style.opacity = '1';
+                    }
                     if (shareBtn) shareBtn.style.display = 'block';
                 }, 500);
                 return;
@@ -2318,10 +2379,25 @@ function initSpinUI() {
                 const listEl = document.getElementById(`group-list-${activeGroup}`);
                 const countEl = document.getElementById(`group-count-${activeGroup}`);
                 if (listEl) {
-                    listEl.innerHTML += `<li>${winnerName}</li>`;
-                    // listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    if (spinModeCheck === 'urutan') {
+                        const item = document.createElement('span');
+                        item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
+                        item.style.background = '#e2e8f0';
+                        item.style.color = '#1e293b';
+                        item.style.padding = '0.4rem 0.8rem';
+                        item.style.borderRadius = '50px';
+                        item.style.fontSize = '0.95rem';
+                        item.style.fontWeight = '500';
+                        item.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                        item.style.display = 'inline-block';
+                        listEl.appendChild(item);
+                    } else {
+                        listEl.innerHTML += `<li>${winnerName}</li>`;
+                    }
                 }
                 if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
+
+                currentDrawCount++;
 
                 roundRobinCounter++;
                 setTimeout(spinSequentialRound, 500);
@@ -2373,10 +2449,25 @@ function initSpinUI() {
                     const listEl = document.getElementById(`group-list-${activeGroup}`);
                     const countEl = document.getElementById(`group-count-${activeGroup}`);
                     if (listEl) {
-                        listEl.innerHTML += `<li>${winnerName}</li>`;
-                        // listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        if (spinModeCheck === 'urutan') {
+                            const item = document.createElement('span');
+                            item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
+                            item.style.background = '#e2e8f0';
+                            item.style.color = '#1e293b';
+                            item.style.padding = '0.4rem 0.8rem';
+                            item.style.borderRadius = '50px';
+                            item.style.fontSize = '0.95rem';
+                            item.style.fontWeight = '500';
+                            item.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                            item.style.display = 'inline-block';
+                            listEl.appendChild(item);
+                        } else {
+                            listEl.innerHTML += `<li>${winnerName}</li>`;
+                        }
                     }
                     if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
+
+                    currentDrawCount++;
 
                     roundRobinCounter++;
                     setTimeout(spinSequentialRound, 500);

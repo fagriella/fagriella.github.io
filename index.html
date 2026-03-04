@@ -94,7 +94,7 @@
         <ul class="main-menu-links">
             <li><a href="#" id="menu-beranda"><i class="ph ph-house"></i> Beranda</a></li>
             <li><a href="#arsipfoto" id="menu-arsip-foto"><i class="ph ph-images"></i> Arsip Foto</a></li>
-            <li><a href="#undi" id="menu-undi"><i class="ph ph-dice-five"></i> Undi Kelompok</a></li>
+            <li><a href="#undi" id="menu-undi"><i class="ph ph-dice-five"></i> Spin</a></li>
             <li><a href="#upload" id="menu-upload"><i class="ph ph-upload-simple"></i> Upload Materi</a></li>
             <li><a href="#pengaturan" id="menu-pengaturan"><i class="ph ph-gear"></i> Pengaturan</a></li>
             <li><a href="#tentang" id="menu-tentang"><i class="ph ph-info"></i> Tentang</a></li>
@@ -255,12 +255,36 @@
                     <div id="spin-right-panel"
                         style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; min-width: 250px; padding-top: 0.5rem; transition: all 0.5s ease; flex: 1;">
 
+                        <!-- Mode Pilihan -->
+                        <div id="spin-mode-container"
+                            style="display: flex; gap: 1.5rem; width: 100%; justify-content: center; margin-bottom: 0.5rem;">
+                            <label
+                                style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+                                <input type="radio" name="spin-mode" value="kelompok" checked
+                                    style="accent-color: var(--brand-color); width: 1.2rem; height: 1.2rem;"> Kelompok
+                            </label>
+                            <label
+                                style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+                                <input type="radio" name="spin-mode" value="urutan"
+                                    style="accent-color: var(--brand-color); width: 1.2rem; height: 1.2rem;"> Urutan
+                            </label>
+                        </div>
+
                         <div id="spin-group-input-container"
                             style="text-align: center; width: 100%; transition: opacity 0.3s;">
                             <label for="spin-groups"
                                 style="display:block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 600; font-size: 1rem;">Jumlah
                                 Kelompok</label>
                             <input type="number" id="spin-groups" min="1" max="50" value="5"
+                                style="padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-size: 1.2rem; font-weight: bold; outline: none; width: 100%; text-align: center;">
+                        </div>
+
+                        <div id="spin-winner-input-container"
+                            style="text-align: center; width: 100%; transition: opacity 0.3s; display: none;">
+                            <label for="spin-winners"
+                                style="display:block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 600; font-size: 1rem;">Jumlah
+                                Terpilih</label>
+                            <input type="number" id="spin-winners" min="1" max="100" value="1"
                                 style="padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-size: 1.2rem; font-weight: bold; outline: none; width: 100%; text-align: center;">
                         </div>
 
