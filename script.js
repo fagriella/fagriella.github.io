@@ -2382,14 +2382,20 @@ function initSpinUI() {
                     if (spinModeCheck === 'urutan') {
                         const item = document.createElement('span');
                         item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
-                        item.style.background = '#e2e8f0';
-                        item.style.color = '#1e293b';
-                        item.style.padding = '0.4rem 0.8rem';
-                        item.style.borderRadius = '50px';
+                        item.style.padding = '0.4rem 0.6rem';
                         item.style.fontSize = '0.95rem';
                         item.style.fontWeight = '500';
-                        item.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
                         item.style.display = 'inline-block';
+
+                        // Konfigurasi Grid bila belum ada
+                        if (listEl.style.display !== 'grid') {
+                            listEl.style.display = 'grid';
+                            listEl.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                            listEl.style.gap = '8px';
+                            listEl.style.listStyle = 'none';
+                            listEl.style.paddingLeft = '0';
+                        }
+
                         listEl.appendChild(item);
                     } else {
                         listEl.innerHTML += `<li>${winnerName}</li>`;
@@ -2452,14 +2458,19 @@ function initSpinUI() {
                         if (spinModeCheck === 'urutan') {
                             const item = document.createElement('span');
                             item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
-                            item.style.background = '#e2e8f0';
-                            item.style.color = '#1e293b';
-                            item.style.padding = '0.4rem 0.8rem';
-                            item.style.borderRadius = '50px';
+                            item.style.padding = '0.4rem 0.6rem';
                             item.style.fontSize = '0.95rem';
                             item.style.fontWeight = '500';
-                            item.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
                             item.style.display = 'inline-block';
+
+                            if (listEl.style.display !== 'grid') {
+                                listEl.style.display = 'grid';
+                                listEl.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                                listEl.style.gap = '8px';
+                                listEl.style.listStyle = 'none';
+                                listEl.style.paddingLeft = '0';
+                            }
+
                             listEl.appendChild(item);
                         } else {
                             listEl.innerHTML += `<li>${winnerName}</li>`;
