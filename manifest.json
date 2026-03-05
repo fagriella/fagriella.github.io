@@ -1,0 +1,42 @@
+{
+    "name": "F.AGRIELLA — Arsip Kuliah",
+    "short_name": "F.AGRIELLA",
+    "description": "Arsip materi, tugas, foto, dan info kuliah dalam satu tempat.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#0f1a17",
+    "theme_color": "#1e3932",
+    "lang": "id",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/images/logo/F.AGRIELLA.webp",
+            "sizes": "192x192",
+            "type": "image/webp",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/images/logo/F.AGRIELLA.webp",
+            "sizes": "512x512",
+            "type": "image/webp",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "education",
+        "productivity"
+    ],
+    "shortcuts": [
+        {
+            "name": "Materi",
+            "url": "/#materi",
+            "description": "Akses langsung ke arsip materi"
+        },
+        {
+            "name": "Tugas",
+            "url": "/#tugas",
+            "description": "Lihat daftar tugas"
+        }
+    ]
+}

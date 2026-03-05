@@ -86,46 +86,113 @@
     <div class="card">
         <div class="logo"><span>F.</span>AGRIELLA</div>
         <div class="spinner" id="spinner"></div>
-        <div class="msg" id="msg">Mengarahkan ke file...</div>
+        <div class="msg" id="msg">Memuat data...</div>
     </div>
 
     <script>
         (function () {
-            var hash = window.location.hash.substring(1);
-            if (!hash) {
-                document.getElementById('msg').innerHTML = '<span class="error">Link tidak valid.</span><br><br><a href="/">Kembali ke Beranda</a>';
-                document.getElementById('spinner').style.display = 'none';
-                return;
+            var MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1308771559&single=true&output=csv';
+
+            var msgEl = document.getElementById('msg');
+            var spinnerEl = document.getElementById('spinner');
+
+            function showError(text) {
+                spinnerEl.style.display = 'none';
+                msgEl.innerHTML = '<span class="error">' + text + '</span><br><br><a href="/">Kembali ke Beranda</a>';
             }
 
-            // Cek tipe link dari prefix
-            var url = '';
+            function redirectTo(url, label) {
+                var display = label || url.substring(0, 60);
+                msgEl.innerHTML = 'Mengarahkan ke:<br><a href="' + url + '">' + display + '</a>';
+                setTimeout(function () { window.location.href = url; }, 600);
+            }
 
-            if (hash.startsWith('p:')) {
-                // Google Slides/Presentation: p:ID
-                var id = hash.substring(2);
-                url = 'https://docs.google.com/presentation/d/' + id;
-            } else if (hash.startsWith('s:')) {
-                // Google Sheets: s:ID
-                var id = hash.substring(2);
-                url = 'https://docs.google.com/spreadsheets/d/' + id;
-            } else if (hash.startsWith('d:')) {
-                // Google Docs: d:ID
-                var id = hash.substring(2);
-                url = 'https://docs.google.com/document/d/' + id;
-            } else if (hash.startsWith('http')) {
-                // Full URL (fallback)
-                url = decodeURIComponent(hash);
+            // Parser CSV yang menghormati kutip ganda (untuk nilai yang mengandung koma)
+            function parseCSVRow(line) {
+                var result = [];
+                var val = '';
+                var inQuote = false;
+                for (var i = 0; i < line.length; i++) {
+                    var c = line[i];
+                    if (c === '"') {
+                        if (inQuote && line[i + 1] === '"') { val += '"'; i++; }
+                        else { inQuote = !inQuote; }
+                    } else if (c === ',' && !inQuote) {
+                        result.push(val.trim()); val = '';
+                    } else {
+                        val += c;
+                    }
+                }
+                result.push(val.trim());
+                return result;
+            }
+
+            var hash = decodeURIComponent(window.location.hash.substring(1));
+            if (!hash) { showError('Link tidak valid.'); return; }
+
+            // Cek apakah format baru: p:{nomor}, s:{nomor}, d:{nomor}, atau {nomor} saja
+            // Format baru: huruf prefix diikuti titik dua dan ANGKA murni (bukan file ID yg panjang)
+            var newFmtMatch = hash.match(/^([psd%]):(\d+)$/) || hash.match(/^(\d+)$/);
+
+            if (newFmtMatch) {
+                // Format baru: ambil berdasarkan nomor baris dari CSV
+                var rowNum = parseInt(newFmtMatch[newFmtMatch.length - 1], 10);
+                if (!rowNum || rowNum < 1) { showError('Nomor link tidak valid.'); return; }
+                msgEl.textContent = 'Mencari file #' + rowNum + '...';
+
+                fetch(MATERIALS_SHEET_URL)
+                    .then(function (r) { return r.text(); })
+                    .then(function (csv) {
+                        // Normalisasi line endings
+                        var lines = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+                        if (lines.length < 2) { showError('Data kosong.'); return; }
+
+                        // Parse header untuk tahu posisi kolom 'link' dan 'filename'
+                        var headers = parseCSVRow(lines[0]);
+                        var linkIdx = headers.indexOf('link');
+                        var nameIdx = headers.indexOf('filename');
+                        if (linkIdx === -1) { showError('Kolom "link" tidak ditemukan di sheet.'); return; }
+
+                        // rows[0] = header, rows[rowNum] = data baris ke-rowNum (1-indexed dari data)
+                        var dataLineIndex = rowNum; // line index = rowNum (karena header di index 0)
+                        if (dataLineIndex >= lines.length) {
+                            showError('Link #' + rowNum + ' tidak ditemukan.');
+                            return;
+                        }
+
+                        var cols = parseCSVRow(lines[dataLineIndex]);
+                        var link = cols[linkIdx] || '';
+                        var name = cols[nameIdx] || '';
+
+                        if (!link) { showError('File #' + rowNum + ' tidak memiliki link.'); return; }
+
+                        // Jika link adalah Google Drive link, redirect ke view
+                        var url = link;
+                        var driveMatch = link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (driveMatch) {
+                            url = 'https://drive.google.com/file/d/' + driveMatch[1] + '/view';
+                        }
+
+                        redirectTo(url, name || null);
+                    })
+                    .catch(function () { showError('Gagal memuat data. Periksa koneksi.'); });
+
             } else {
-                // Default: Google Drive file
-                url = 'https://drive.google.com/file/d/' + hash + '/view';
+                // Format lama: p:FILE_ID, s:FILE_ID, d:FILE_ID, atau URL langsung
+                var url = '';
+                if (hash.startsWith('p:')) {
+                    url = 'https://docs.google.com/presentation/d/' + hash.substring(2);
+                } else if (hash.startsWith('s:')) {
+                    url = 'https://docs.google.com/spreadsheets/d/' + hash.substring(2);
+                } else if (hash.startsWith('d:')) {
+                    url = 'https://docs.google.com/document/d/' + hash.substring(2);
+                } else if (hash.startsWith('http')) {
+                    url = decodeURIComponent(hash);
+                } else {
+                    url = 'https://drive.google.com/file/d/' + hash + '/view';
+                }
+                redirectTo(url, null);
             }
-
-            document.getElementById('msg').innerHTML = 'Mengarahkan ke:<br><a href="' + url + '">' + url.substring(0, 60) + '...</a>';
-
-            setTimeout(function () {
-                window.location.href = url;
-            }, 500);
         })();
     </script>
 </body>

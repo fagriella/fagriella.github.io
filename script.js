@@ -1749,75 +1749,54 @@ function renderModalContent(type) {
     }
 }
 
-// 6. Bookmark Logic
-// Helper untuk menghasilkan short link dari URL Google Drive/Docs
+// Helper untuk menghasilkan short link berbasis urutan baris di sheet materials
 function generateShortLink(url) {
     const origin = window.location.origin;
-    // Google Drive file: /d/FILE_ID/
-    var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (match) {
-        if (url.includes('presentation')) return origin + '/s/#p:' + match[1];
-        if (url.includes('spreadsheets')) return origin + '/s/#s:' + match[1];
-        if (url.includes('document')) return origin + '/s/#d:' + match[1];
-        return origin + '/s/#' + match[1];
+    // Cari material berdasarkan URL/link yang cocok
+    const idx = materialsData.findIndex(m => m.link === url);
+    if (idx !== -1) {
+        const m = materialsData[idx];
+        const rowNum = idx + 1; // baris data ke-1 = nomor 1
+        if (m.link && (m.link.includes('presentation') || m.type === 'ppt' || m.type === 'pptx')) {
+            return origin + '/s/#p:' + rowNum;
+        } else if (m.link && m.link.includes('spreadsheets')) {
+            return origin + '/s/#s:' + rowNum;
+        } else if (m.link && m.link.includes('document')) {
+            return origin + '/s/#d:' + rowNum;
+        }
+        return origin + '/s/#' + rowNum;
     }
-    // Fallback: encode full URL
+    // Fallback: encode full URL jika tidak ditemukan di data
     return origin + '/s/#' + encodeURIComponent(url);
 }
 
-async function copyShortLink(url, btn, e) {
+function copyShortLink(url, btn, e) {
     if (e) e.stopPropagation();
     var short = generateShortLink(url);
     var icon = btn.querySelector('i');
 
-    // Tampilkan spinner sementara
-    if (icon) icon.className = 'ph ph-spinner';
-
-    function onSuccess(finalUrl) {
+    function onSuccess() {
         if (icon) { icon.className = 'ph ph-check'; }
         setTimeout(function () { if (icon) icon.className = 'ph ph-link'; }, 1500);
     }
 
-    function doCopy(textToCopy) {
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(textToCopy).then(() => onSuccess(textToCopy)).catch(function () {
-                prompt('Copy link ini:', textToCopy);
-                onSuccess(textToCopy);
-            });
-        } else {
-            var textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-999999px";
-            textArea.style.top = "-999999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                onSuccess(textToCopy);
-            } catch (err) {
-                prompt('Copy link ini:', textToCopy);
-                onSuccess(textToCopy);
-            }
-            document.body.removeChild(textArea);
-        }
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(short).then(onSuccess).catch(function () {
+            prompt('Copy link ini:', short);
+            onSuccess();
+        });
+    } else {
+        var textArea = document.createElement('textarea');
+        textArea.value = short;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try { document.execCommand('copy'); onSuccess(); }
+        catch (err) { prompt('Copy link ini:', short); onSuccess(); }
+        document.body.removeChild(textArea);
     }
-
-    // Coba persingkat via TinyURL API
-    try {
-        var res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(short)}`);
-        if (res.ok) {
-            var tiny = await res.text();
-            if (tiny && tiny.startsWith('https://')) {
-                doCopy(tiny);
-                return;
-            }
-        }
-    } catch (_) { /* ignore, fallback ke short link internal */ }
-
-    // Fallback ke internal short link
-    doCopy(short);
 }
 
 function isBookmarked(id) {
