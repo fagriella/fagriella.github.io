@@ -300,10 +300,16 @@
                                 style="width: 100%; height: 100%; display: block;"></canvas>
                         </div>
 
-                        <button id="btn-spin"
-                            style="background: var(--brand-color); color: white; border: none; padding: 0.8rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); width: 100%;">
-                            Mulai Acak!
-                        </button>
+                        <div id="spin-buttons-container" style="display: flex; gap: 1rem; width: 100%;">
+                            <button id="btn-spin"
+                                style="flex: 1; background: var(--brand-color); color: white; border: none; padding: 0.8rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
+                                Mulai Acak!
+                            </button>
+                            <button id="btn-reset-spin"
+                                style="display: none; background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border-color); padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease;">
+                                Reset
+                            </button>
+                        </div>
 
                     </div>
                 </div>

@@ -1958,6 +1958,17 @@ function parseDateStr(d) {
 // ==========================================
 let isSpinning = false;
 let forceStop = false; // Flag for click-to-stop
+let spinSession = {
+    active: false,
+    remainingNames: [],
+    groups: [],
+    groupTurnOrder: [],
+    roundRobinCounter: 0,
+    currentDrawCount: 0,
+    maxWinners: 0,
+    numGroups: 1,
+    mode: 'kelompok'
+};
 
 function initSpinUI() {
     const btnSpin = document.getElementById('btn-spin');
@@ -2100,8 +2111,35 @@ function initSpinUI() {
         drawWheel(lines, currentRotation);
     };
 
-    textarea.addEventListener('input', updateCount);
+    textarea.addEventListener('input', () => {
+        if (spinSession.active) {
+            const resetBtn = document.getElementById('btn-reset-spin');
+            if (resetBtn) resetBtn.click();
+        }
+        updateCount();
+    });
     updateCount(); // Initial update
+
+    const btnResetSpin = document.getElementById('btn-reset-spin');
+    if (btnResetSpin) {
+        btnResetSpin.addEventListener('click', () => {
+            if (isSpinning) return;
+            spinSession.active = false;
+
+            textarea.disabled = false;
+            btnResetSpin.style.display = 'none';
+            btnSpin.innerHTML = 'Mulai Acak!';
+            btnSpin.style.display = 'block';
+            resultsContainer.innerHTML = '';
+
+            if (resultsWrapper) resultsWrapper.style.display = 'none';
+            if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+            if (shareBtn) shareBtn.style.display = 'none';
+
+            currentRotation = 0;
+            updateCount();
+        });
+    }
 
     // Fitur Fullscreen
     if (fullscreenBtn) {
@@ -2204,24 +2242,69 @@ function initSpinUI() {
                 alert("Masukkan jumlah kelompok yang valid.");
                 return;
             }
-            if (numGroups > namesList.length) {
-                alert(`Jumlah kelompok (${numGroups}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
-                return;
+            if (!spinSession.active) {
+                if (numGroups > namesList.length) {
+                    alert(`Jumlah kelompok (${numGroups}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
+                    return;
+                }
+                maxWinners = namesList.length;
+            } else {
+                maxWinners = spinSession.maxWinners + namesList.length;
             }
         } else {
             const winnerInput = document.getElementById('spin-winners');
             if (winnerInput) {
-                maxWinners = parseInt(winnerInput.value, 10);
-                if (isNaN(maxWinners) || maxWinners < 1) {
+                const addWinners = parseInt(winnerInput.value, 10);
+                if (isNaN(addWinners) || addWinners < 1) {
                     alert("Masukkan jumlah orang terpilih yang valid.");
                     return;
                 }
-                if (maxWinners > namesList.length) {
-                    alert(`Jumlah terpilih (${maxWinners}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
-                    return;
+                if (!spinSession.active) {
+                    if (addWinners > namesList.length) {
+                        alert(`Jumlah terpilih (${addWinners}) tidak boleh melebihi jumlah mahasiswa (${namesList.length}).`);
+                        return;
+                    }
+                    maxWinners = addWinners;
+                } else {
+                    if (addWinners > spinSession.remainingNames.length) {
+                        alert(`Sisa mahasiswa tinggal ${spinSession.remainingNames.length} orang.`);
+                        return;
+                    }
+                    maxWinners = spinSession.currentDrawCount + addWinners;
                 }
             }
         }
+
+        // Inisialisasi State Session
+        if (!spinSession.active) {
+            spinSession.active = true;
+            spinSession.remainingNames = shuffleArray([...namesList]);
+            spinSession.mode = spinMode;
+            spinSession.numGroups = spinMode === 'kelompok' ? numGroups : 1;
+            spinSession.groups = Array.from({ length: spinSession.numGroups }, () => []);
+            spinSession.groupTurnOrder = shuffleArray(Array.from({ length: spinSession.numGroups }, (_, i) => i));
+            spinSession.roundRobinCounter = 0;
+            spinSession.currentDrawCount = 0;
+
+            textarea.disabled = true;
+            resultsContainer.innerHTML = '';
+            let initialHTML = '';
+            for (let i = 0; i < spinSession.numGroups; i++) {
+                const groupTitle = spinMode === 'urutan' ? 'Daftar Urutan Terpilih' : `Kelompok ${i + 1}`;
+                initialHTML += `
+                    <div class="group-card" id="group-card-${i}">
+                        <h3 class="group-card-header">
+                            ${groupTitle}
+                            <span id="group-count-${i}" class="group-card-count">0 Orang</span>
+                        </h3>
+                        <ol id="group-list-${i}" class="group-card-list"></ol>
+                    </div>
+                `;
+            }
+            resultsContainer.innerHTML = initialHTML;
+            if (typeof updateCount === 'function') updateCount();
+        }
+        spinSession.maxWinners = maxWinners;
 
         // 2. Mulai Animasi Pengacakan
         isSpinning = true;
@@ -2282,6 +2365,12 @@ function initSpinUI() {
         btnSpin.style.opacity = '0';
         setTimeout(() => btnSpin.style.display = 'none', 300);
 
+        const btnResetSpin = document.getElementById('btn-reset-spin');
+        if (btnResetSpin) {
+            btnResetSpin.style.opacity = '0';
+            setTimeout(() => btnResetSpin.style.display = 'none', 300);
+        }
+
         if (spinDisplay) {
             const size = window.innerWidth < 500 ? '280px' : '400px';
             spinDisplay.style.width = size;
@@ -2289,36 +2378,15 @@ function initSpinUI() {
             spinDisplay.style.borderWidth = '8px';
         }
 
-        // --- MULAI LOGIKA SEKUENSIAL ---
-        let remainingNames = shuffleArray([...namesList]);
-        const groups = Array.from({ length: numGroups }, () => []);
-
-        // Acak urutan giliran kelompok (agar kelompok sisa tidak selalu di Kelompok 1 & 2)
-        const groupTurnOrder = shuffleArray(Array.from({ length: numGroups }, (_, i) => i));
-        let roundRobinCounter = 0;
-
-        // Munculkan kontainer kotak kelompok kosong terlebih dahulu
-        let initialHTML = '';
-        const spinModeCheck = document.querySelector('input[name="spin-mode"]:checked')?.value || 'kelompok';
-
-        for (let i = 0; i < numGroups; i++) {
-            const groupTitle = spinModeCheck === 'urutan' ? 'Daftar Urutan Terpilih' : `Kelompok ${i + 1}`;
-            initialHTML += `
-                <div class="group-card" id="group-card-${i}">
-                    <h3 class="group-card-header">
-                        ${groupTitle}
-                        <span id="group-count-${i}" class="group-card-count">0 Orang</span>
-                    </h3>
-                    <ol id="group-list-${i}" class="group-card-list"></ol>
-                </div>
-            `;
-        }
-        resultsContainer.innerHTML = initialHTML;
-
-        let currentDrawCount = 0;
+        // --- LOGIKA SESI STATE ---
+        const remainingNames = spinSession.remainingNames;
+        const groups = spinSession.groups;
+        const groupTurnOrder = spinSession.groupTurnOrder;
+        const numGroupLocales = spinSession.numGroups;
+        const spinModeCheck = spinSession.mode;
 
         function spinSequentialRound() {
-            if (remainingNames.length === 0 || currentDrawCount >= maxWinners) {
+            if (remainingNames.length === 0 || spinSession.currentDrawCount >= spinSession.maxWinners) {
                 isSpinning = false;
 
                 // --- STOP REKAM VIDEO ---
@@ -2334,14 +2402,34 @@ function initSpinUI() {
                 setTimeout(() => {
                     if (leftPanel) { leftPanel.style.display = 'block'; void leftPanel.offsetWidth; leftPanel.style.opacity = '1'; leftPanel.style.transform = 'scale(1)'; }
 
-                    const modeCheck = document.querySelector('input[name="spin-mode"]:checked')?.value;
-                    if (groupInputContainer && modeCheck !== 'urutan') {
+                    if (groupInputContainer && spinModeCheck !== 'urutan') {
                         groupInputContainer.style.display = 'block';
                         void groupInputContainer.offsetWidth;
                         groupInputContainer.style.opacity = '1';
                     }
 
-                    btnSpin.style.display = 'block'; void btnSpin.offsetWidth; btnSpin.style.opacity = '1'; btnSpin.style.cursor = 'pointer'; btnSpin.innerHTML = 'Acak Ulang';
+                    if (winnerInputContainer && spinModeCheck === 'urutan') {
+                        winnerInputContainer.style.display = 'block';
+                        void winnerInputContainer.offsetWidth;
+                        winnerInputContainer.style.opacity = '1';
+                    }
+
+                    btnSpin.style.display = 'block';
+                    void btnSpin.offsetWidth;
+                    btnSpin.style.opacity = '1';
+                    btnSpin.style.cursor = 'pointer';
+                    btnSpin.innerHTML = (remainingNames.length > 0) ? 'Lanjut Acak' : 'Selesai';
+
+                    if (remainingNames.length === 0) {
+                        btnSpin.style.display = 'none';
+                    }
+
+                    if (btnResetSpin) {
+                        btnResetSpin.style.display = 'block';
+                        void btnResetSpin.offsetWidth;
+                        btnResetSpin.style.opacity = '1';
+                    }
+
                     if (modeContainer) {
                         modeContainer.style.display = 'flex';
                         void modeContainer.offsetWidth;
@@ -2369,11 +2457,11 @@ function initSpinUI() {
                 // Hapus nama dari daftar
                 remainingNames.splice(winnerIndex, 1);
 
-                if (roundRobinCounter > 0 && roundRobinCounter % numGroups === 0) {
+                if (spinSession.roundRobinCounter > 0 && spinSession.roundRobinCounter % numGroupLocales === 0) {
                     shuffleArray(groupTurnOrder);
                 }
 
-                let activeGroup = groupTurnOrder[roundRobinCounter % numGroups];
+                let activeGroup = groupTurnOrder[spinSession.roundRobinCounter % numGroupLocales];
                 groups[activeGroup].push(winnerName);
 
                 const listEl = document.getElementById(`group-list-${activeGroup}`);
@@ -2381,7 +2469,7 @@ function initSpinUI() {
                 if (listEl) {
                     if (spinModeCheck === 'urutan') {
                         const item = document.createElement('span');
-                        item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
+                        item.innerText = `${spinSession.currentDrawCount + 1}. ${winnerName}`;
                         item.style.padding = '0.4rem 0.6rem';
                         item.style.fontSize = '0.95rem';
                         item.style.fontWeight = '500';
@@ -2389,8 +2477,10 @@ function initSpinUI() {
 
                         // Konfigurasi Grid bila belum ada
                         if (listEl.style.display !== 'grid') {
+                            const totalItems = spinSession.maxWinners;
+                            const cols = Math.min(totalItems, 5);
                             listEl.style.display = 'grid';
-                            listEl.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                            listEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
                             listEl.style.gap = '8px';
                             listEl.style.listStyle = 'none';
                             listEl.style.paddingLeft = '0';
@@ -2403,9 +2493,11 @@ function initSpinUI() {
                 }
                 if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
-                currentDrawCount++;
+                textarea.value = remainingNames.join('\n');
+                if (typeof updateCount === 'function') updateCount();
 
-                roundRobinCounter++;
+                spinSession.currentDrawCount++;
+                spinSession.roundRobinCounter++;
                 setTimeout(spinSequentialRound, 500);
                 return;
             }
@@ -2445,11 +2537,11 @@ function initSpinUI() {
                     remainingNames.splice(winnerIndex, 1);
 
                     // Re-shuffle urutan giliran setiap kali satu putaran penuh (setiap kelompok sudah dapat 1)
-                    if (roundRobinCounter > 0 && roundRobinCounter % numGroups === 0) {
+                    if (spinSession.roundRobinCounter > 0 && spinSession.roundRobinCounter % numGroupLocales === 0) {
                         shuffleArray(groupTurnOrder);
                     }
 
-                    let activeGroup = groupTurnOrder[roundRobinCounter % numGroups];
+                    let activeGroup = groupTurnOrder[spinSession.roundRobinCounter % numGroupLocales];
                     groups[activeGroup].push(winnerName);
 
                     const listEl = document.getElementById(`group-list-${activeGroup}`);
@@ -2457,7 +2549,7 @@ function initSpinUI() {
                     if (listEl) {
                         if (spinModeCheck === 'urutan') {
                             const item = document.createElement('span');
-                            item.innerText = `${currentDrawCount + 1}. ${winnerName}`;
+                            item.innerText = `${spinSession.currentDrawCount + 1}. ${winnerName}`;
                             item.style.padding = '0.4rem 0.6rem';
                             item.style.fontSize = '0.95rem';
                             item.style.fontWeight = '500';
@@ -2478,9 +2570,11 @@ function initSpinUI() {
                     }
                     if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
-                    currentDrawCount++;
+                    textarea.value = remainingNames.join('\n');
+                    if (typeof updateCount === 'function') updateCount();
 
-                    roundRobinCounter++;
+                    spinSession.currentDrawCount++;
+                    spinSession.roundRobinCounter++;
                     setTimeout(spinSequentialRound, 500);
                 }
             }
