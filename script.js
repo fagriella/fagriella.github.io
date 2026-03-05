@@ -1765,43 +1765,59 @@ function generateShortLink(url) {
     return origin + '/s/#' + encodeURIComponent(url);
 }
 
-function copyShortLink(url, btn, e) {
+async function copyShortLink(url, btn, e) {
     if (e) e.stopPropagation();
     var short = generateShortLink(url);
+    var icon = btn.querySelector('i');
 
-    function onSuccess() {
-        var icon = btn.querySelector('i');
+    // Tampilkan spinner sementara
+    if (icon) icon.className = 'ph ph-spinner';
+
+    function onSuccess(finalUrl) {
         if (icon) { icon.className = 'ph ph-check'; }
         setTimeout(function () { if (icon) icon.className = 'ph ph-link'; }, 1500);
     }
 
-    // Modern Secure Context API
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(short).then(onSuccess).catch(function () {
-            prompt('Copy link ini:', short);
-        });
-    } else {
-        // Fallback for insecure context (HTTP or file://)
-        var textArea = document.createElement("textarea");
-        textArea.value = short;
-        textArea.style.position = "fixed"; // Prevent scrolling
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            var successful = document.execCommand('copy');
-            if (successful) {
-                onSuccess();
-            } else {
-                prompt('Copy link ini:', short);
+    function doCopy(textToCopy) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(() => onSuccess(textToCopy)).catch(function () {
+                prompt('Copy link ini:', textToCopy);
+                onSuccess(textToCopy);
+            });
+        } else {
+            var textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                onSuccess(textToCopy);
+            } catch (err) {
+                prompt('Copy link ini:', textToCopy);
+                onSuccess(textToCopy);
             }
-        } catch (err) {
-            prompt('Copy link ini:', short);
+            document.body.removeChild(textArea);
         }
-        document.body.removeChild(textArea);
     }
+
+    // Coba persingkat via TinyURL API
+    try {
+        var res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(short)}`);
+        if (res.ok) {
+            var tiny = await res.text();
+            if (tiny && tiny.startsWith('https://')) {
+                doCopy(tiny);
+                return;
+            }
+        }
+    } catch (_) { /* ignore, fallback ke short link internal */ }
+
+    // Fallback ke internal short link
+    doCopy(short);
 }
 
 function isBookmarked(id) {
