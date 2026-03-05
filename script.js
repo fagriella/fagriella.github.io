@@ -1558,17 +1558,15 @@ function renderModalContent(type) {
                     }
                 } catch (e) { /* Abaikan jika URL tidak valid */ }
             }
-            // Cek apakah link adalah Google Drive
+            // Cek apakah link adalah Google Drive atau Docs
             else if (downloadLink.includes('drive.google.com') || downloadLink.includes('docs.google.com')) {
-                // Extract file ID dari URL Google Drive
                 const driveIdMatch = downloadLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (driveIdMatch) {
                     const fileId = driveIdMatch[1];
-                    // Gunakan export link untuk preview tanpa login
-                    const exportUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                    previewLink = `https://docs.google.com/gview?url=${encodeURIComponent(exportUrl)}&embedded=true`;
+                    const baseUrl = downloadLink.split('/d/' + fileId)[0];
+                    previewLink = `${baseUrl}/d/${fileId}/preview`;
                 } else {
-                    previewLink = downloadLink.replace(/\/view.*/, '/preview');
+                    previewLink = downloadLink.replace(/\/(view|edit).*/, '/preview');
                 }
             }
             // Jika file office atau PDF biasa (Direct Link), bungkus dengan Google Docs Viewer
@@ -1800,7 +1798,14 @@ function renderBookmarks(semesterFilter) {
                 }
                 // 1. Google Drive
                 else if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
-                    previewLink = b.link.replace(/\/view.*/, '/preview');
+                    const driveIdMatch = b.link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (driveIdMatch) {
+                        const fileId = driveIdMatch[1];
+                        const baseUrl = b.link.split('/d/' + fileId)[0];
+                        previewLink = `${baseUrl}/d/${fileId}/preview`;
+                    } else {
+                        previewLink = b.link.replace(/\/(view|edit).*/, '/preview');
+                    }
                     canPreview = true;
                 }
                 // 2. Dokumen Office/PDF (Cek ekstensi)
@@ -1849,7 +1854,7 @@ function renderBookmarks(semesterFilter) {
                     imgSrc = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                 }
             }
-            const previewLink = b.link ? b.link.replace(/\/view.*/, '/preview') : '#';
+            const previewLink = b.link ? b.link.replace(/\/(view|edit).*/, '/preview') : '#';
 
             return `
             <div class="bookmark-photo-item">
