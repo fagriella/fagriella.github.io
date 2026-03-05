@@ -1420,3 +1420,32 @@ input:checked+.slider:before {
         transform: translateY(0);
     }
 }
+
+/* =========================================
+   Custom Scrollbar (Theme-Aware)
+   ========================================= */
+/* Firefox Support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+/* Webkit (Chrome, Edge, Safari) Support */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-secondary);
+}

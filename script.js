@@ -12,6 +12,7 @@ const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE
 const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1992582246&single=true&output=csv';
 const ARSIP_FOTO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=474587746&single=true&output=csv'; // Ganti gid arsip foto nantinya
 const MAHASISWA_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1814680259&single=true&output=csv'; // GANTI GID INI DENGAN TAB MAHASISWA
+const INFO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1266085536&single=true&output=csv';
 const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec'; // URL dari autosinkronmateri.gs
 
 // State Data
@@ -710,28 +711,114 @@ function setupEventListeners() {
         closeMenu();
     });
 
-    // Notification Toggle
+    // Notification/Info Panel Toggle
     const notifBtn = document.getElementById('notif-toggle');
-    if (notifBtn) {
-        notifBtn.addEventListener('click', () => {
-            window.OneSignalDeferred.push(async function (OneSignal) {
-                const permission = await OneSignal.getNotificationPermission();
-                const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+    const infoPanel = document.getElementById('info-panel');
+    const infoPanelBody = document.getElementById('info-panel-body');
+    const infoPanelClose = document.getElementById('info-panel-close');
 
-                let statusMessage = `Status Langganan: ${isSubscribed ? 'Terdaftar' : 'Belum Terdaftar'}\n`;
-                statusMessage += `Izin Browser: ${permission.toUpperCase()}`;
-
-                if (isSubscribed) {
-                    alert(statusMessage);
-                } else if (permission === 'denied') {
-                    alert(statusMessage + "\n\nNotifikasi diblokir. Harap reset izin notifikasi di pengaturan situs (ikon gembok di address bar).");
-                } else {
-                    alert("Anda belum terdaftar notifikasi. Klik OK untuk memulai pendaftaran.");
-                    await OneSignal.User.PushSubscription.optIn();
-                }
+    function openInfoPanel() {
+        if (infoPanelBody) {
+            infoPanelBody.innerHTML = `<div style="text-align:center; padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;"><i class="ph ph-spinner" style="animation: spin 1s linear infinite; font-size:1.2rem;"></i><br>Memuat info...</div>`;
+        }
+        if (infoPanel) {
+            infoPanel.style.display = 'block';
+            requestAnimationFrame(() => {
+                infoPanel.style.transform = 'translateY(0)';
+                infoPanel.style.opacity = '1';
             });
+        }
+        // Load data from Google Sheets
+        fetch(INFO_SHEET_URL)
+            .then(r => r.text())
+            .then(csv => {
+                const rows = csv.trim().split('\n').slice(1); // skip header
+                if (!rows.length || (rows.length === 1 && rows[0].trim() === '')) {
+                    if (infoPanelBody) infoPanelBody.innerHTML = `<div style="text-align:center; padding:1rem; color:var(--text-secondary); font-size:0.85rem;">Belum ada info terbaru.</div>`;
+                    return;
+                }
+                // Parse rows and sort by date descending (newest first)
+                const parsed = rows.map(row => {
+                    const cols = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                    const [tanggal = '', kategori = '', judul = '', isi = ''] = cols;
+                    return { tanggal, kategori, judul, isi };
+                }).filter(r => r.judul || r.isi);
+
+                parsed.sort((a, b) => {
+                    const parseDate = s => {
+                        const [d, m, y] = s.split('-');
+                        return y && m && d ? new Date(`${y}-${m}-${d}`) : new Date(0);
+                    };
+                    return parseDate(b.tanggal) - parseDate(a.tanggal);
+                });
+
+                const html = parsed.map(({ kategori, judul, isi }) => `
+                    <div style="margin-bottom: 0.85rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                        ${kategori ? `<span style="font-size: 0.7rem; font-weight: 700; color: var(--accent-color); text-transform: uppercase; letter-spacing: 0.5px;">${kategori}</span>` : ''}
+                        ${judul ? `<div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem; margin-top: 0.15rem; margin-bottom: 0.15rem;">${judul}</div>` : ''}
+                        ${isi ? `<div style="font-size: 0.83rem;">${isi}</div>` : ''}
+                    </div>
+                `).join('');
+                if (infoPanelBody) infoPanelBody.innerHTML = html || `<div style="text-align:center;padding:1rem;color:var(--text-secondary);font-size:0.85rem;">Belum ada info terbaru.</div>`;
+            })
+            .catch(() => {
+                if (infoPanelBody) infoPanelBody.innerHTML = `<div style="text-align:center;padding:1rem;color:var(--text-secondary);font-size:0.85rem;">Gagal memuat info. Coba lagi nanti.</div>`;
+            });
+    }
+
+    function closeInfoPanel() {
+        if (infoPanel) {
+            infoPanel.style.transform = 'translateY(-10px)';
+            infoPanel.style.opacity = '0';
+            setTimeout(() => { infoPanel.style.display = 'none'; }, 250);
+        }
+    }
+
+    let infoPanelTimeout;
+    let infoPanelPinned = false;
+
+    function showPanel() {
+        clearTimeout(infoPanelTimeout);
+        openInfoPanel();
+    }
+
+    function hidePanel() {
+        if (infoPanelPinned) return; // jangan tutup jika di-pin
+        infoPanelTimeout = setTimeout(() => closeInfoPanel(), 200);
+    }
+
+    function closePinnedPanel() {
+        infoPanelPinned = false;
+        closeInfoPanel();
+    }
+
+    if (notifBtn) {
+        notifBtn.addEventListener('mouseenter', showPanel);
+        notifBtn.addEventListener('mouseleave', hidePanel);
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            infoPanelPinned = !infoPanelPinned;
+            if (infoPanelPinned) {
+                showPanel(); // pastikan terbuka
+            } else {
+                closePinnedPanel(); // tutup jika di-unpin
+            }
         });
     }
+
+    if (infoPanel) {
+        infoPanel.addEventListener('mouseenter', () => clearTimeout(infoPanelTimeout));
+        infoPanel.addEventListener('mouseleave', hidePanel);
+    }
+
+    if (infoPanelClose) infoPanelClose.addEventListener('click', closePinnedPanel);
+
+    document.addEventListener('click', (e) => {
+        if (infoPanelPinned && infoPanel && !infoPanel.contains(e.target) && e.target !== notifBtn) {
+            closePinnedPanel();
+        }
+    });
+
 
     // Notification Settings Button (Inside Modal)
     const notifSettingsBtn = document.getElementById('btn-check-notif-settings');
@@ -1563,8 +1650,7 @@ function renderModalContent(type) {
                 const driveIdMatch = downloadLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (driveIdMatch) {
                     const fileId = driveIdMatch[1];
-                    const baseUrl = downloadLink.split('/d/' + fileId)[0];
-                    previewLink = `${baseUrl}/d/${fileId}/preview`;
+                    previewLink = `https://drive.google.com/file/d/${fileId}/preview`;
                 } else {
                     previewLink = downloadLink.replace(/\/(view|edit).*/, '/preview');
                 }
@@ -1679,16 +1765,43 @@ function generateShortLink(url) {
     return origin + '/s/#' + encodeURIComponent(url);
 }
 
-function copyShortLink(url, btn) {
+function copyShortLink(url, btn, e) {
+    if (e) e.stopPropagation();
     var short = generateShortLink(url);
-    navigator.clipboard.writeText(short).then(function () {
+
+    function onSuccess() {
         var icon = btn.querySelector('i');
         if (icon) { icon.className = 'ph ph-check'; }
         setTimeout(function () { if (icon) icon.className = 'ph ph-link'; }, 1500);
-    }).catch(function () {
-        // Fallback jika clipboard API tidak tersedia
-        prompt('Copy link ini:', short);
-    });
+    }
+
+    // Modern Secure Context API
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(short).then(onSuccess).catch(function () {
+            prompt('Copy link ini:', short);
+        });
+    } else {
+        // Fallback for insecure context (HTTP or file://)
+        var textArea = document.createElement("textarea");
+        textArea.value = short;
+        textArea.style.position = "fixed"; // Prevent scrolling
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                onSuccess();
+            } else {
+                prompt('Copy link ini:', short);
+            }
+        } catch (err) {
+            prompt('Copy link ini:', short);
+        }
+        document.body.removeChild(textArea);
+    }
 }
 
 function isBookmarked(id) {
@@ -1796,13 +1909,12 @@ function renderBookmarks(semesterFilter) {
                         }
                     } catch (e) { /* ignore */ }
                 }
-                // 1. Google Drive
+                // 1. Google Drive atau Docs
                 else if (b.link.includes('drive.google.com') || b.link.includes('docs.google.com')) {
                     const driveIdMatch = b.link.match(/\/d\/([a-zA-Z0-9_-]+)/);
                     if (driveIdMatch) {
                         const fileId = driveIdMatch[1];
-                        const baseUrl = b.link.split('/d/' + fileId)[0];
-                        previewLink = `${baseUrl}/d/${fileId}/preview`;
+                        previewLink = `https://drive.google.com/file/d/${fileId}/preview`;
                     } else {
                         previewLink = b.link.replace(/\/(view|edit).*/, '/preview');
                     }

@@ -52,3 +52,17 @@ Digunakan untuk menampung gambar/foto tak terikat dengan mata kuliah, atau dikel
 | `link` | Link file di GitHub (contoh: /img/foto.jpg) atau URL eksternal lainnya | `/img/foto.jpg` |
 
 ---
+
+### Tab 5: `InfoPanel` (Panel Info Terbaru / Lonceng)
+Digunakan untuk mengisi pengumuman yang tampil di panel notifikasi (ikon lonceng 🔔) di bagian header web.
+
+| Kolom | Deskripsi | Contoh Isi |
+| :--- | :--- | :--- |
+| `tanggal` | Tanggal pengumuman — **hanya untuk mengurutkan** (terbaru tampil pertama), **tidak ditampilkan** di panel | `06-03-2026` |
+| `kategori` | Label/badge kategori (tampil berwarna oranye) | `Update`, `Pengumuman`, `Penting` |
+| `judul` | Judul pengumuman (dicetak tebal) | `Jadwal Quiz Minggu Ini` |
+| `isi` | Isi detail pengumuman | `Quiz PBO dilaksanakan hari Rabu pukul 10.00` |
+
+> **Catatan:** Baris pertama (baris 1) adalah header dan **tidak akan ditampilkan**. Pengumuman terbaru sebaiknya diletakkan di **baris paling atas** (baris 2) agar tampil pertama di panel.
+
+---
