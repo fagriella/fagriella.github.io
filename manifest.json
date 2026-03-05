@@ -11,15 +11,15 @@
     "orientation": "any",
     "icons": [
         {
-            "src": "/images/logo/F.AGRIELLA.webp",
+            "src": "/images/logo/icon-192.png",
             "sizes": "192x192",
-            "type": "image/webp",
+            "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "/images/logo/F.AGRIELLA.webp",
+            "src": "/images/logo/icon-512.png",
             "sizes": "512x512",
-            "type": "image/webp",
+            "type": "image/png",
             "purpose": "any maskable"
         }
     ],
