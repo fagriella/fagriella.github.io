@@ -2445,8 +2445,6 @@ function initSpinUI() {
         }
         // -------------------------
 
-        resultsContainer.innerHTML = ''; // Bersihkan hasil sebelumnya
-
         // Animasi memperbesar roda dan menyembunyikan panel lain
         const leftPanel = document.getElementById('spin-left-panel');
         const groupInputContainer = document.getElementById('spin-group-input-container');
