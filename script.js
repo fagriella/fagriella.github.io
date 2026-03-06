@@ -1253,7 +1253,7 @@ async function loadTentangContent() {
     if (contentDiv.dataset.loaded === 'true') return; // Cukup load 1x
 
     try {
-        const response = await fetch('tentang.md');
+        const response = await fetch('docs/tentang.md');
         if (!response.ok) throw new Error('File tidak ditemukan');
         let text = await response.text();
 
