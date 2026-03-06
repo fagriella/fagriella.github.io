@@ -1,65 +1,75 @@
 # Panduan Upload Arsip & Materi Kuliah
 
-Sistem F.AGRIELLA mendukung **dua cara** untuk mengunggah materi, foto, dan tugas. Silakan pilih cara yang paling sesuai dengan kebutuhan dan ukuran file Anda.
+Sistem F.AGRIELLA dirancang untuk memudahkan PJ Mata Kuliah dalam mendistribusikan arsip kuliah secara efisien. Terdapat **tiga cara** utama untuk mengunggah data: melalui **Formulir Web**, **Manual Google Drive**, dan **Manual GitHub**.
 
 ---
 
-## CARA 1: Melalui Form Upload Web (Rekomendasi)
-Ini adalah cara termudah dan paling direkomendasikan untuk pemakaian sehari-hari. File akan otomatis disimpan ke **Google Drive** kelas dan didata ke sistem.
+## CARA 1: Melalui Formulir Web (Rekomendasi)
+Ini adalah metode utama yang paling sering digunakan. File akan disimpan secara aman di **Google Drive** kelas dan data akan langsung muncul di website.
 
-### 📝 Cara Upload
+### Prosedur Unggah
 1. **Pilih Jenis Interaksi:**
-   - **Materi Perkuliahan:** Untuk file PPT, PDF, Makalah, foto materi.
-   - **Foto Dokumentasi:** Untuk foto kegiatan / kenangan(file akan otomatis dikompres agar web tetap ringan).
-   - **Tugas Kuliah:** Untuk memberikan pengumuman tugas (akan mengirim notifikasi ke semua mahasiswa).
-   - **Hapus Arsip:** Untuk menghapus file yang salah upload.
-2. **Isi Detail Form:** Pilih Semester dan Mata Kuliah / Nama Album.
-3. **Nama File / Link:** 
-   - Anda bisa mengosongkan bagian ini untuk menggunakan nama file asli.
-   - Anda juga bisa memasukkan **Link Google Drive / Link YouTube** ke kotak ini tanpa harus melampirkan file.
-4. **Lampirkan File:** Seret file ke area putus-putus atau klik untuk memilih file (maksimal 50MB per file).
-5. **Masukkan Token:** Masukkan token rahasia untuk konfirmasi keamanan.
-6. Klik **Kirim Arsip**. 
-   - *Data akan otomatis tersimpan ke Sheet dan Web akan langsung memperbarui tampilannya dalam hitungan detik.*
+   - **Materi Perkuliahan:** Untuk file PDF, PPT, Word, atau Gambar Materi.
+   - **Foto Dokumentasi:** Untuk foto papan tulis atau kegiatan (Sistem akan mengompres file agar web tetap ringan).
+   - **Tugas Kuliah:** Memberikan pengumuman tugas. **Otomatis mengirimkan Push Notification ke seluruh mahasiswa!**
+   - **Hapus Arsip:** Untuk menghapus catatan yang salah upload.
+2. **Pilih Semester & Mata Kuliah/Album:** Pilih sesuai tujuan arsip Anda.
+3. **Nama File atau Link (Opsional):** 
+   - Anda bisa mengosongkan ini untuk menggunakan nama file asli.
+   - **Tips:** Anda bisa memasukkan **Link Google Drive / YouTube** di kolom ini tanpa harus mengunggah file fisik.
+4. **Lampirkan File:** Seret file ke area upload (Maksimal 50MB per file).
+5. **Konfirmasi Token:** Masukkan kembali token Anda sebagai langkah keamanan terakhir.
+6. Klik **"Kirim Arsip"**. Data akan langsung terupdate di web dalam hitungan detik.
 
 ---
 
-## CARA 2: Upload Langsung via GitHub (Alternatif)
-Gunakan cara ini jika Anda ingin mengunggah foto yang ukurannya **sangat besar (di atas 100MB)** yang seringkali gagal jika diupload lewat web form, atau jika Anda ingin merapikan folder arsip secara manual beramai-ramai.
+## CARA 2: Unggah Manual ke Google Drive (Khusus Materi)
+Gunakan metode ini jika Anda ingin mengunggah banyak file materi sekaligus (bulk upload) tanpa melalui formulir web.
 
-### 🔑 Syarat
-Anda harus memiliki akun GitHub dan sudah diberikan akses kolaborator ke repository `fagriella/fagriella.github.io`.
+### Syarat
+Anda harus memiliki akses editor ke folder Google Drive utama **"Arsip Kuliah"**. Hubungi Admin untuk mendapatkan akses.
 
-### 📝 Cara Upload Materi
-1. Buka halaman GitHub Repository: `https://github.com/fagriella/fagriella.github.io`
-2. Buka folder `materi/`
-3. Buka folder `Semester (N)/` (contoh: `Semester 1`)
-4. Buka folder Mata Kuliah yang dituju (contoh: `Pengantar Agribisnis`)
-   - *Jika belum ada, Anda bisa menekan tombol **Add file > Create new file**, ketik `Nama Matkul/placeholder.txt` lalu di-commit untuk membuat folder baru.*
-5. Di dalam folder Matkul, klik **Add file > Upload files**.
-6. Pilih file materi Anda, lalu klik **Commit changes**.
-
-### 📸 Cara Upload Foto Dokumentasi
-1. Buka folder `Images/arsipfoto/` di GitHub.
-2. Buka atau buat folder dengan format nama Album (contoh: `Dokumentasi Makrab 2026`).
-3. Klik **Add file > Upload files**, pilih foto Anda, dan **Commit changes**.
-
-### 🔄 Sinkronisasi (PENTING!)
-File yang diunggah langsung ke GitHub **tidak akan langsung muncul di halaman web**. File tersebut perlu didaftarkan dulu ke Google Sheets.
-- Jangan khawatir, sistem akan melakukan scan otomatis ke folder GitHub **setiap 30 Menit** di belakang layar, lalu mendaftarkannya ke web.
-- Jika Anda tidak ingin menunggu 30 menit, Anda bisa menghubungi admin/PJ pemegang akses **Google Apps Script** untuk menekan tombol *Run Manual* pada script `autosinkronmateri.gs`.
+### Struktur Folder di Google Drive
+Pastikan Anda menaruh file di dalam folder tersebut dengan struktur berikut agar terdeteksi:
+- **`Semester X / Nama Mata Kuliah /`**
+- Contoh: `Semester 1 / Pengantar Agribisnis / Modul_1.pdf`
 
 ---
 
-## ❓ Kapan harus pakai cara mana?
+## CARA 3: Unggah Manual ke GitHub (Alternatif & Foto)
+Gunakan metode ini jika Anda perlu mengunggah **Foto Dokumentasi** 
 
-| Kriteria | Cara 1 (Web Form) | Cara 2 (GitHub) |
-|---|---|---|
-| **Kemudahan** | ⭐⭐⭐⭐⭐ Sangat Mudah | ⭐⭐⭐ Perlu paham GitHub |
-| **Ukuran File** | Maks <= 50 MB / file | Maks <= 100 MB / file |
-| **Penyimpanan** | Masuk ke Google Drive | Masuk ke server GitHub |
-| **Kecepatan Tampil** | Instan (1-3 detik) | Menunggu jadwal sync (30 menit) |
-| **Fitur** | Bisa sebar Info Tugas & Notifikasi | Hanya file biasa (Foto/Materi) |
-| **Akses** | Hanya butuh Token PJ | Butuh Akun GitHub kolaborator |
+### Syarat
+Anda harus memiliki akun GitHub yang sudah diberikan akses kolaborator ke repository `fagriella/fagriella.github.io`.
 
-*Gunakan **Cara 1** untuk 95% aktivitas perkuliahan normal. Gunakan **Cara 2** hanya saat menemui file video/materi raksasa.*
+### Struktur Folder di GitHub
+Pastikan Anda menaruh file di folder yang tepat:
+
+**1. Untuk Foto Dokumentasi:**
+Lokasi: `arsipfoto / Nama Album /`
+- Contoh: `arsipfoto/Dokumentasi Makrab 2026/foto1.jpg`
+
+---
+
+### Sinkronisasi Otomatis (Cara 2 & 3)
+File yang diunggah secara manual ke Google Drive atau GitHub **tidak akan langsung muncul** saat itu juga.
+- **Jadwal Sync:** Sistem melakukan pemindaian otomatis setiap **30 Menit** di belakang layar.
+- **Sync Manual:** Jika ingin file langsung muncul, buka Google Spreadsheet database, klik menu **"Arsip Kuliah Sync" > "Sinkronisasi Ulang Materi"** di barisan menu atas.
+
+---
+
+## Perbandingan Metode
+
+| Fitur | Cara 1 (Form Web) | Cara 2 (Manual GDrive) | Cara 3 (Manual GitHub) |
+|---|---|---|---|
+| **Kemudahan** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Batas Ukuran** | Maks 50MB | Kuota Drive | Maks 100MB (GitHub) |
+| **Jenis File** | Materi, Foto, Tugas | Khusus Materi | Materi & Foto |
+| **Kecepatan** | Langsung (1-3 dtk) | Tunggu Sync (30 mnt) | Tunggu Sync (30 mnt) |
+
+---
+
+## Troubleshooting (Penyelesaian Masalah)
+1. **Token Salah:** Pastikan nama/token PJ yang Anda ketik di Form (Cara 1) sudah sesuai.
+2. **File Tidak Muncul:** Periksa apakah nama folder Semester dan Mata Kuliah sudah sesuai format (Cara 2 & 3). Tunggu jadwal sinkronisasi atau lakukan Sinkronisasi Manual.
+3. **Error "File too large":** Gunakan Google Drive biasa lalu salin link-nya ke formulir tipe "Materi", atau gunakan Cara 3 (GitHub).
