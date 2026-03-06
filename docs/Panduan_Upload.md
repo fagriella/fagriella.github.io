@@ -54,7 +54,7 @@ Lokasi: `arsipfoto / Nama Album /`
 ### Sinkronisasi Otomatis (Cara 2 & 3)
 File yang diunggah secara manual ke Google Drive atau GitHub **tidak akan langsung muncul** saat itu juga.
 - **Jadwal Sync:** Sistem melakukan pemindaian otomatis setiap **30 Menit** di belakang layar.
-- **Sync Manual:** Jika ingin file langsung muncul, buka Google Spreadsheet database, klik menu **"Arsip Kuliah Sync" > "Sinkronisasi Ulang Materi"** di barisan menu atas.
+- **Sync Manual:** Jika ingin file langsung muncul, Anda cukup **Me-refresh / Memuat Ulang** halaman website F.AGRIELLA Anda.
 
 ---
 
