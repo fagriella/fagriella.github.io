@@ -88,7 +88,8 @@
             <a href="#" class="logo">
                 <span class="accent">F.</span>AGRIELLA
             </a>
-            <button id="close-main-menu" class="icon-btn" style="font-size: 2rem; color: var(--white);">&times;</button>
+            <button id="close-main-menu" class="icon-btn" style="font-size: 1.5rem; color: var(--white);"><i
+                    class="ph ph-list"></i></button>
         </div>
         <ul class="main-menu-links">
             <li><a href="#" id="menu-beranda"><i class="ph ph-house"></i> Beranda</a></li>
@@ -114,9 +115,14 @@
                 <button id="menu-toggle" class="icon-btn" aria-label="Menu">
                     <i class="ph ph-list"></i>
                 </button>
-                <a href="#" class="logo">
-                    <span class="accent">F.</span>AGRIELLA
-                </a>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <a href="#" class="logo">
+                        <span class="accent">F.</span>AGRIELLA
+                    </a>
+                    <span id="sync-spinner" style="display: none; color: var(--accent-color); font-size: 1.2rem;">
+                        <i class="ph ph-spinner ph-spin"></i>
+                    </span>
+                </div>
             </div>
             <div class="nav-controls">
                 <div class="search-bar">
@@ -130,7 +136,7 @@
                     <div id="undi-settings-panel" class="undi-settings-panel">
                         <div class="control-item" title="Lama Putaran (Detik)">
                             <i class="ph ph-timer" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
-                            <input type="number" id="spin-duration-input" min="1" max="60" value="3">
+                            <input type="number" id="spin-duration-input" min="1" max="60" value="1">
                             <span style="color: var(--text-secondary); font-size: 0.9rem;">Detik</span>
                         </div>
                         <div class="control-item">

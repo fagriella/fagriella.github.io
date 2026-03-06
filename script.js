@@ -35,6 +35,36 @@ window.addEventListener('message', async function (event) {
     }
 });
 
+// --- OVERRIDE CTRL+R / CMD+R UNTUK SINKRONISASI LATAR BELAKANG ---
+document.addEventListener('keydown', async function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault(); // Mencegah browser melakukan hard reload
+
+        console.log("Ctrl+R ditekan! Memulai sinkronisasi latar belakang (Autosinkronmateri -> Refresh Data)...");
+
+        // Efek visual: Tampilkan spinner di sebelah logo header
+        const syncSpinner = document.getElementById('sync-spinner');
+        if (syncSpinner) syncSpinner.style.display = 'inline-block';
+
+        try {
+            // 1. Eksekusi script sinkronisasi (GitHub -> Drive -> Sheets)
+            if (SYNC_SCRIPT_URL && !SYNC_SCRIPT_URL.includes('PASTE')) {
+                await fetch(SYNC_SCRIPT_URL, { mode: 'no-cors' }).catch(() => { });
+            }
+            // 2. Tunggu 3 detik agar eksekusi script di server kelar
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            // 3. Ambil ulang data JSON dari Sheets
+            await refreshData();
+        } catch (err) {
+            console.error(err);
+            await refreshData();
+        } finally {
+            if (syncSpinner) syncSpinner.style.display = 'none';
+        }
+    }
+});
+
 // State Data
 let coursesData = [];
 let materialsData = [];
@@ -1405,6 +1435,10 @@ async function loadPanduanUploadContent() {
 }
 function openCourseModal(course) {
     activeCourse = course; // Set active course
+
+    // Update URL di address bar agar bisa di-share & di-bookmark
+    const mkSlug = encodeURIComponent(course.name);
+    window.history.pushState({ course: course.name }, '', `#semester${course.semester}/${mkSlug}`);
     const modal = document.getElementById('material-modal');
     const tabs = document.querySelector('.modal-tabs');
     const titleEl = document.getElementById('modal-title');
@@ -2793,8 +2827,8 @@ function initSpinUI() {
                 }
                 if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
-                textarea.value = remainingNames.join('\n');
-                if (typeof updateCount === 'function') updateCount();
+                if (countDisplay) countDisplay.innerText = `${remainingNames.length} Orang`;
+                drawWheel(remainingNames, currentRotation);
 
                 spinSession.currentDrawCount++;
                 spinSession.roundRobinCounter++;
@@ -2802,7 +2836,7 @@ function initSpinUI() {
                 return;
             }
 
-            const targetSeconds = durationInput ? (parseFloat(durationInput.value) || 3) : 3;
+            const targetSeconds = durationInput ? (parseFloat(durationInput.value) || 1) : 1;
             const fps = 60;
             const totalFrames = targetSeconds * fps;
             let baseSpeed = 2.0 / targetSeconds;
@@ -2870,8 +2904,8 @@ function initSpinUI() {
                     }
                     if (countEl) countEl.innerText = `${groups[activeGroup].length} Orang`;
 
-                    textarea.value = remainingNames.join('\n');
-                    if (typeof updateCount === 'function') updateCount();
+                    if (countDisplay) countDisplay.innerText = `${remainingNames.length} Orang`;
+                    drawWheel(remainingNames, currentRotation);
 
                     spinSession.currentDrawCount++;
                     spinSession.roundRobinCounter++;
