@@ -1991,7 +1991,32 @@ function showPreview(url, title) {
     const titleEl = document.getElementById('preview-title');
 
     titleEl.innerText = title;
-    frame.src = url;
+
+    // raw.githubusercontent.com memblokir iframe — tampilkan sebagai <img> langsung
+    const isGithubRawImage = (url.includes('raw.githubusercontent.com') || url.includes('github.io')) &&
+        /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/i.test(url);
+
+    if (isGithubRawImage) {
+        frame.src = 'about:blank';
+        frame.style.display = 'none';
+        // Hapus img preview lama jika ada
+        let imgEl = document.getElementById('preview-img-fallback');
+        if (!imgEl) {
+            imgEl = document.createElement('img');
+            imgEl.id = 'preview-img-fallback';
+            imgEl.style.cssText = 'max-width:100%; max-height:80vh; display:block; margin:auto; border-radius:8px;';
+            frame.parentNode.insertBefore(imgEl, frame);
+        }
+        imgEl.src = url;
+        imgEl.style.display = 'block';
+    } else {
+        // Sembunyikan img fallback jika ada
+        const imgEl = document.getElementById('preview-img-fallback');
+        if (imgEl) imgEl.style.display = 'none';
+        frame.style.display = 'block';
+        frame.src = url;
+    }
+
     modal.classList.add('active');
 }
 
