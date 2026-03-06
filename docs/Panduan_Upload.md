@@ -1,71 +1,71 @@
-# Panduan Penggunaan Formulir Arsip Kuliah (Untuk PJ & Dosen)
+# Panduan Upload Arsip & Materi Kuliah
 
-Panduan ini menjelaskan tata cara pengumpulan berbagai jenis arsip melalui formulir terintegrasi pada portal Arsip Kuliah kita.
-
-## Mengakses Formulir
-1. Buka website portal kelas.
-2. Buka menu **Pengaturan/Privasi** yang ada di navigasi bawah (ikon roket/gear).
-3. Masukkan **Token Akses PJ** yang sah di kotak yang tersedia.
-4. Jika token benar, akan muncul tulisan **"Akses Upload Aktif"** berwarna hijau, dan menu **"Upload Materi"** akan muncul di navigasi kiri (Sidebar).
-5. Klik menu **"Upload Materi"** tersebut untuk membuka formulir.
+Sistem F.AGRIELLA mendukung **dua cara** untuk mengunggah materi, foto, dan tugas. Silakan pilih cara yang paling sesuai dengan kebutuhan dan ukuran file Anda.
 
 ---
 
-## 1. Mengunggah MATERI Perkuliahan
-Digunakan untuk mendistribusikan salinan presentasi materi seperti `PPT`, `PDF`, atau `DOCX`.
-1. **Jenis Arsip:** Pilih `Materi Perkuliahan`.
-2. **Semester & Mata Kuliah:** Pilih sesuai jadwal materi yang diajarkan.
-3. **Nama File (Opsional):** Kosongkan saja jika ingin memakai nama file aslinya. Jika filenya bernama "Pertemuan 1 Fix.pdf", ia akan otomatis tetap "Pertemuan 1 Fix.pdf".
-4. **Pilih File:** Wajib memasukkan file lampiran materi.
-5. Klik **"Kirim Arsip"** dan tunggu hingga proses selesai.
+## CARA 1: Melalui Form Upload Web (Rekomendasi)
+Ini adalah cara termudah dan paling direkomendasikan untuk pemakaian sehari-hari. File akan otomatis disimpan ke **Google Drive** kelas dan didata ke sistem.
+
+### 🔑 Langkah Persiapan
+1. Buka website F.AGRIELLA
+2. Scroll ke paling bawah, buka menu navigasi **Pengaturan/Privasi** (ikon gear/roket).
+3. Masukkan **Token Akses PJ** di kotak yang tersedia.
+4. Jika token benar, menu **"Upload Materi"** akan muncul di navigasi kiri (Sidebar). Klik menu tersebut untuk membuka form.
+
+### 📝 Cara Upload
+1. **Pilih Jenis Interaksi:**
+   - **Materi Perkuliahan:** Untuk file PPT, PDF, Makalah, foto materi.
+   - **Foto Dokumentasi:** Untuk foto kegiatan / kenangan(file akan otomatis dikompres agar web tetap ringan).
+   - **Tugas Kuliah:** Untuk memberikan pengumuman tugas (akan mengirim notifikasi ke semua mahasiswa).
+   - **Hapus Arsip:** Untuk menghapus file yang salah upload.
+2. **Isi Detail Form:** Pilih Semester dan Mata Kuliah / Nama Album.
+3. **Nama File / Link:** 
+   - Anda bisa mengosongkan bagian ini untuk menggunakan nama file asli.
+   - Anda juga bisa memasukkan **Link Google Drive / Link YouTube** ke kotak ini tanpa harus melampirkan file.
+4. **Lampirkan File:** Seret file ke area putus-putus atau klik untuk memilih file (maksimal 50MB per file).
+5. **Masukkan Token:** Masukkan kembali token rahasia untuk konfirmasi keamanan.
+6. Klik **Kirim Arsip**. 
+   - *Data akan otomatis tersimpan ke Sheet dan Web akan langsung memperbarui tampilannya dalam hitungan detik.*
 
 ---
 
-## 2. Mengunggah FOTO Dokumentasi
-Digunakan untuk mengarsipkan foto papan tulis, foto kelompok presentasi, ataupun dokumentasi kegiatan kuliah.
-1. **Jenis Arsip:** Pilih `Foto Dokumentasi`.
-2. **Semester & Album:** Pilih Mata Kuliah yang relevan (akan bertindak sebagai "Folder Album" foto tersebut).
-3. **Pilih File:** Wajib melampirkan file foto (berakhiran `.jpg`, `.png`, dsb). *Sistem akan otomatis mengecilkan (kompresi) dan memindahkannya ke server khusus arsip gambar demi mempercepat waktu _loading_ web mahasiswa.*
-4. Klik **"Kirim Arsip"**.
+## CARA 2: Upload Langsung via GitHub (Alternatif)
+Gunakan cara ini jika Anda ingin mengunggah file yang ukurannya **sangat besar (di atas 50MB)** yang seringkali gagal jika diupload lewat web form, atau jika Anda ingin merapikan folder arsip secara manual beramai-ramai.
+
+### 🔑 Syarat
+Anda harus memiliki akun GitHub dan sudah diberikan akses kolaborator ke repository `fagriella/fagriella.github.io`.
+
+### 📝 Cara Upload Materi
+1. Buka halaman GitHub Repository: `https://github.com/fagriella/fagriella.github.io`
+2. Buka folder `materi/`
+3. Buka folder `Semester (N)/` (contoh: `Semester 1`)
+4. Buka folder Mata Kuliah yang dituju (contoh: `Pengantar Agribisnis`)
+   - *Jika belum ada, Anda bisa menekan tombol **Add file > Create new file**, ketik `Nama Matkul/placeholder.txt` lalu di-commit untuk membuat folder baru.*
+5. Di dalam folder Matkul, klik **Add file > Upload files**.
+6. Pilih file materi Anda, lalu klik **Commit changes**.
+
+### 📸 Cara Upload Foto Dokumentasi
+1. Buka folder `Images/arsipfoto/` di GitHub.
+2. Buka atau buat folder dengan format nama Album (contoh: `Dokumentasi Makrab 2026`).
+3. Klik **Add file > Upload files**, pilih foto Anda, dan **Commit changes**.
+
+### 🔄 Sinkronisasi (PENTING!)
+File yang diunggah langsung ke GitHub **tidak akan langsung muncul di halaman web**. File tersebut perlu didaftarkan dulu ke Google Sheets.
+- Jangan khawatir, sistem akan melakukan scan otomatis ke folder GitHub **setiap 30 Menit** di belakang layar, lalu mendaftarkannya ke web.
+- Jika Anda tidak ingin menunggu 30 menit, Anda bisa menghubungi admin/PJ pemegang akses **Google Apps Script** untuk menekan tombol *Run Manual* pada script `autosinkronmateri.gs`.
 
 ---
 
-## 3. Memberikan TUGAS Kuliah
-Digunakan untuk mengumumkan tugas baru kepada seluruh mahasiswa secara serentak.
-1. **Jenis Arsip:** Pilih `Tugas Kuliah`.
-2. Saat opsi ini dipilih, akan otomatis muncul **Kolom Detail Tugas Tambahan**. Isi dengan lengkap:
-   - **Deskripsi Tugas:** (Wajib) Tuliskan judul/inti tugasnya. *Cth: "Mengerjakan Makalah Bab 3"*
-   - **Dosen:** (Wajib) Nama dosen pemberi tugas.
-   - **Batas Waktu (Deadline):** (Wajib) Tentukan tanggal dan jam batas akhir pengumpulan tugas tersebut sedetail mungkin.
-   - **Catatan:** (Opsional) Tulis petunjuk ringkas pengerjaan jika diperlukan.
-3. **File Lampiran Tugas (Opsional):** Berbeda dengan materi, mengunggah file pelengkap untuk tugas sifatnya **TIDAK WAJIB**. Jika hanya sekedar mengumumkan "Kerjakan LKS Hal 10", Anda cukup mengisi kolom catatan di atas dan membiarkan kotak 'File' kosong.
-4. Klik **"Kirim Arsip"**.
-> **PENTING:** Pengumpulan tugas melalui sistem ini akan secara **otomatis menerbitkan Notifikasi/Alarm Pengingat Jarak Jauh (Push Notification)** kepada seluruh perangkat mahasiswa (HP/Laptop) yang telah melakukan pengaktifan lonceng hijau (Subscribe) di website.
+## ❓ Kapan harus pakai cara mana?
 
-<br>
-<hr>
-<br>
+| Kriteria | Cara 1 (Web Form) | Cara 2 (GitHub) |
+|---|---|---|
+| **Kemudahan** | ⭐⭐⭐⭐⭐ Sangat Mudah | ⭐⭐⭐ Perlu paham GitHub |
+| **Ukuran File** | Maks <= 50 MB / file | Maks <= 100 MB / file |
+| **Penyimpanan** | Masuk ke Google Drive | Masuk ke server GitHub |
+| **Kecepatan Tampil** | Instan (1-3 detik) | Menunggu jadwal sync (30 menit) |
+| **Fitur** | Bisa sebar Info Tugas & Notifikasi | Hanya file biasa (Foto/Materi) |
+| **Akses** | Hanya butuh Token PJ | Butuh Akun GitHub kolaborator |
 
-# Panduan Singkat (Versi WhatsApp / Chat Group)
-
-*Assalamu'alaikum/Selamat Pagi Rekan-Rekan PJ,*
-
-*Berikut adalah panduan ringkas cara pakai sistem "Upload Terpadu" di Web Kelas kita. Formulir upload yang baru sekarang 100% otomatis, jadi pastikan kalian membaca ini ya!*
-
-**Langkah Akses:**
-1. Masuk web kelas kita.
-2. Ke menu **Pengaturan** (ikon pojok kanan bawah), lalu ketik **Token PJ** kalian di situ agar panel **"Upload Materi"** terbuka di menu samping.
-
-**Cara Pakainya Gampang!**
-Di dalam formulir upload itu, kalian cuma perlu **pilih tab "JENIS ARSIP"** di paling atas:
-
-**Pilih "MATERI":** Jika cuma mau nitip file PPT/PDF presentasi kelompok/dosen hari ini. Upload file-nya, beres. Wajib ada filenya ya!
-**Pilih "FOTO":** Jika mau upload foto papan tulis/dokumentasi. Masukkan gambarnya, nanti sistem kita yang urus agar rapi masuk ke folder album arsip foto masing-masing Matkul.
-**Pilih "TUGAS":** *(Nah ini yang paling canggih)*
-Kalau kalian bawa titipan PR dari dosen, pilih ini! Nanti bakal otomatis muncul *form* tambahan buat ngisi **Tenggat Waktu (Deadline), Info Dosen, dan Deskripsi Tugasnya**. 
-*Kerennya, ngisi form ini nggak perlu repot nyari file lampiran kalau memang tugasnya cuma disuruh baca LKS. Kosongin aja kotak file-nya gak masalah!*
-
-**PERHATIAN KHUSUS TUGAS:**
-Begitu kalian tekan "Kirim", **SERVER AKAN OTOMATIS MENGUNCI JADWAL DEADLINE TERSEBUT & MENGIRIM KAN NOTIFIKASI ALARM KE SELURUH HP MAHASISWA SATU KELAS** layaknya alarm sahur! Jadi, pastikan kalian tidak salah masukin jam *Deadline*-nya ya!
-
-*Gasskeun, mari kita buat kuliah online ini makin modern! Kalau ada error, segera kabarin admin.*
+*Gunakan **Cara 1** untuk 95% aktivitas perkuliahan normal. Gunakan **Cara 2** hanya saat menemui file video/materi raksasa.*
