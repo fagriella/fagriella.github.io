@@ -706,6 +706,7 @@ function setupEventListeners() {
     const menuOverlay = document.getElementById('menu-overlay');
 
     const openMenu = () => {
+        if (menuToggle.classList.contains('back-btn-mode')) return; // Mencegah menu terbuka jika tombol sedang menjadi tombol back
         mainMenu.classList.add('active');
         menuOverlay.classList.add('active');
     };
@@ -2499,7 +2500,7 @@ function initSpinUI() {
                 text += "\n";
             });
 
-            text += "_Dibuat dengan F.AGRIELLA_";
+            text += "_Dibuat dengan fagriella.github.io_";
 
             // Coba Share Native (Video + Teks) jika didukung browser HP
             if (recordedBlob && navigator.share) {
