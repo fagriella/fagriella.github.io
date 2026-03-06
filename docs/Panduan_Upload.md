@@ -7,12 +7,6 @@ Sistem F.AGRIELLA mendukung **dua cara** untuk mengunggah materi, foto, dan tuga
 ## CARA 1: Melalui Form Upload Web (Rekomendasi)
 Ini adalah cara termudah dan paling direkomendasikan untuk pemakaian sehari-hari. File akan otomatis disimpan ke **Google Drive** kelas dan didata ke sistem.
 
-### 🔑 Langkah Persiapan
-1. Buka website F.AGRIELLA
-2. Scroll ke paling bawah, buka menu navigasi **Pengaturan/Privasi** (ikon gear/roket).
-3. Masukkan **Token Akses PJ** di kotak yang tersedia.
-4. Jika token benar, menu **"Upload Materi"** akan muncul di navigasi kiri (Sidebar). Klik menu tersebut untuk membuka form.
-
 ### 📝 Cara Upload
 1. **Pilih Jenis Interaksi:**
    - **Materi Perkuliahan:** Untuk file PPT, PDF, Makalah, foto materi.
@@ -24,14 +18,14 @@ Ini adalah cara termudah dan paling direkomendasikan untuk pemakaian sehari-hari
    - Anda bisa mengosongkan bagian ini untuk menggunakan nama file asli.
    - Anda juga bisa memasukkan **Link Google Drive / Link YouTube** ke kotak ini tanpa harus melampirkan file.
 4. **Lampirkan File:** Seret file ke area putus-putus atau klik untuk memilih file (maksimal 50MB per file).
-5. **Masukkan Token:** Masukkan kembali token rahasia untuk konfirmasi keamanan.
+5. **Masukkan Token:** Masukkan token rahasia untuk konfirmasi keamanan.
 6. Klik **Kirim Arsip**. 
    - *Data akan otomatis tersimpan ke Sheet dan Web akan langsung memperbarui tampilannya dalam hitungan detik.*
 
 ---
 
 ## CARA 2: Upload Langsung via GitHub (Alternatif)
-Gunakan cara ini jika Anda ingin mengunggah file yang ukurannya **sangat besar (di atas 50MB)** yang seringkali gagal jika diupload lewat web form, atau jika Anda ingin merapikan folder arsip secara manual beramai-ramai.
+Gunakan cara ini jika Anda ingin mengunggah foto yang ukurannya **sangat besar (di atas 100MB)** yang seringkali gagal jika diupload lewat web form, atau jika Anda ingin merapikan folder arsip secara manual beramai-ramai.
 
 ### 🔑 Syarat
 Anda harus memiliki akun GitHub dan sudah diberikan akses kolaborator ke repository `fagriella/fagriella.github.io`.
