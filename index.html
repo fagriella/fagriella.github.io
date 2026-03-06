@@ -143,6 +143,10 @@
                         </div>
                     </div>
                 </div>
+                <button id="btn-upload-guide-nav" class="icon-btn" aria-label="Panduan Upload" style="display: none;"
+                    onclick="window.location.hash = 'panduan-upload';">
+                    <i class="ph ph-info"></i>
+                </button>
                 <button id="notif-toggle" class="icon-btn" aria-label="Informasi">
                     <i class="ph ph-bell"></i>
                 </button>
@@ -356,6 +360,18 @@
             </div>
         </section>
 
+        <!-- Container Panduan Upload -->
+        <section id="container-panduan-upload" class="content-area"
+            style="display: none; height: calc(100vh - 100px); overflow-y: auto;">
+            <div style="padding: 2rem;">
+                <!-- Content gets injected here -->
+                <div id="panduan-upload-content" style="color: var(--text-primary); line-height: 1.6;">
+                    <div style="text-align: center; color: var(--text-secondary);"><i class="ph ph-spinner ph-spin"
+                            style="font-size: 2rem;"></i><br>Memuat panduan...</div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Modal Detail Materi -->
@@ -431,6 +447,16 @@
                     <h4>Penyimpanan Fungsional</h4>
                     <p>Selalu aktif. Diperlukan agar situs dapat berfungsi dengan benar.</p>
                 </div>
+                <div class="cookie-pref-item">
+                    <h4>Preferensi & Personalisasi</h4>
+                    <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai
+                        (Bookmark).</p>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="consent-personalization-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
                 <div class="cookie-pref-item">
                     <h4>Notifikasi</h4>
                     <p>Kelola izin notifikasi untuk tugas baru.</p>

@@ -1106,13 +1106,26 @@ function checkHashRoute() {
     const navBrand = document.querySelector('.navbar .logo');
     if (navBrand) navBrand.innerHTML = '<span class="accent">F.</span>AGRIELLA';
 
-    // --- Navbar Controls Visibility ---
+    // --- Navbar Controls Visibility & State ---
     const searchBar = document.querySelector('.nav-controls .search-bar');
     const undiSettings = document.getElementById('navbar-undi-settings');
+    const uploadGuideBtn = document.getElementById('btn-upload-guide-nav');
+    const menuToggleIcon = document.querySelector('#menu-toggle i');
+    const menuToggleBtn = document.getElementById('menu-toggle');
 
-    // Reset to default state (show search, hide undi settings)
+    // Reset to default state
     if (searchBar) searchBar.style.display = 'flex';
     if (undiSettings) undiSettings.style.display = 'none';
+    if (uploadGuideBtn) uploadGuideBtn.style.display = 'none';
+
+    // Reset Menu Toggle to Hamburger
+    if (menuToggleIcon) {
+        menuToggleIcon.className = 'ph ph-list';
+    }
+    if (menuToggleBtn) {
+        menuToggleBtn.onclick = null; // Remove any custom back actions
+        menuToggleBtn.classList.remove('back-btn-mode');
+    }
 
     // 1. Rute Semester (atau kosongan dihitung Beranda)
     if (!hash || hash.startsWith('semester')) {
@@ -1120,13 +1133,13 @@ function checkHashRoute() {
         if (btn) btn.classList.add('active');
 
         // Kembalikan tampilan utama (Beranda)
-        ['container-arsip-foto', 'container-upload', 'container-undi', 'container-tentang'].forEach(id => {
+        ['container-arsip-foto', 'container-upload', 'container-undi', 'container-tentang', 'container-panduan-upload'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         // Tampilkan content-area utama (course list)
-        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang):not(#container-panduan-upload)');
         if (mainContent) mainContent.style.display = 'block';
 
         // Tampilkan sidebar kembali
@@ -1137,12 +1150,12 @@ function checkHashRoute() {
         const mainLayout = document.querySelector('.main-layout');
         if (mainLayout) mainLayout.style.gridTemplateColumns = '';
     }
-    // 2. Rute Upload
     else if (hash === 'upload') {
         const uploadBtn = document.getElementById('menu-upload');
         if (uploadBtn) uploadBtn.classList.add('active');
 
         if (searchBar) searchBar.style.display = 'none';
+        if (uploadGuideBtn) uploadGuideBtn.style.display = 'flex';
 
         const uploadModal = document.getElementById('upload-modal');
         if (uploadModal) uploadModal.classList.add('active');
@@ -1182,13 +1195,13 @@ function checkHashRoute() {
         if (undiBtn) undiBtn.classList.add('active');
 
         // Hide all containers safely, then show undi
-        ['container-arsip-foto', 'container-upload', 'container-tentang'].forEach(id => {
+        ['container-arsip-foto', 'container-upload', 'container-tentang', 'container-panduan-upload'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         // Sembunyikan content-area utama (course list)
-        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang):not(#container-panduan-upload)');
         if (mainContent) mainContent.style.display = 'none';
 
         // Sembunyikan sidebar dan luaskan grid
@@ -1218,13 +1231,13 @@ function checkHashRoute() {
         if (tentangBtn) tentangBtn.classList.add('active');
 
         // Hide all containers safely, then show tentang
-        ['container-arsip-foto', 'container-upload', 'container-undi'].forEach(id => {
+        ['container-arsip-foto', 'container-upload', 'container-undi', 'container-panduan-upload'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
         // Sembunyikan content-area utama (course list)
-        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang)');
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang):not(#container-panduan-upload)');
         if (mainContent) mainContent.style.display = 'none';
 
         // Sembunyikan sidebar dan luaskan grid
@@ -1244,6 +1257,47 @@ function checkHashRoute() {
 
         // Load tentang.md info
         loadTentangContent();
+    }
+    // 7. Rute Panduan Upload
+    else if (hash === 'panduan-upload') {
+        // Hide all containers safely
+        ['container-arsip-foto', 'container-upload', 'container-undi', 'container-tentang'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Sembunyikan content-area utama (course list)
+        const mainContent = document.querySelector('.content-area:not(#container-arsip-foto):not(#container-upload):not(#container-undi):not(#container-tentang):not(#container-panduan-upload)');
+        if (mainContent) mainContent.style.display = 'none';
+
+        // Sembunyikan sidebar dan luaskan grid
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+
+        const mainLayout = document.querySelector('.main-layout');
+        if (mainLayout) mainLayout.style.gridTemplateColumns = '1fr';
+
+        // Tampilkan container Panduan Upload
+        const panduanContainer = document.getElementById('container-panduan-upload');
+        if (panduanContainer) panduanContainer.style.display = 'block';
+
+        const navBrand = document.querySelector('.navbar .logo');
+        if (navBrand) navBrand.innerHTML = '<span class="accent">Panduan</span> Upload';
+        if (searchBar) searchBar.style.display = 'none';
+
+        // Ubah Hamburger Menu jadi tombol Back
+        if (menuToggleIcon) menuToggleIcon.className = 'ph ph-arrow-left';
+        if (menuToggleBtn) {
+            menuToggleBtn.classList.add('back-btn-mode');
+            menuToggleBtn.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.hash = 'upload';
+            };
+        }
+
+        // Load panduan.md info
+        loadPanduanUploadContent();
     }
 }
 
@@ -1273,6 +1327,79 @@ async function loadTentangContent() {
         contentDiv.dataset.loaded = 'true';
     } catch (error) {
         contentDiv.innerHTML = '<p style="color:var(--danger); text-align:center;"><i class="ph ph-warning-circle" style="font-size: 2rem;"></i><br>Gagal memuat halaman tentang (tentang.md tidak ditemukan).</p>';
+    }
+}
+
+async function loadPanduanUploadContent() {
+    const contentDiv = document.getElementById('panduan-upload-content');
+    if (!contentDiv || contentDiv.dataset.loaded === 'true') return;
+
+    try {
+        const response = await fetch('docs/Panduan_Upload.md');
+        if (!response.ok) throw new Error('File tidak ditemukan');
+        let text = await response.text();
+
+        text = text
+            // Horizontal rule
+            .replace(/^---$/gim, '<hr style="margin: 2rem 0; border: 0; border-top: 1px dashed var(--border-color);">')
+            // Headers
+            .replace(/^### (.*$)/gim, '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--brand-color);">$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1 style="color: var(--brand-color); margin-bottom: 1rem;">$1</h1>')
+            // Bold & Italic
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            // Links
+            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank' style='color: var(--accent-color); text-decoration: none; font-weight: 600;'>$1</a>")
+            // Inline code
+            .replace(/`(.*?)`/gim, '<code style="background: var(--card-bg); color: var(--accent-color); padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; font-family: monospace;">$1</code>')
+            // Tables (rows)
+            .replace(/^\|(.*)\|[\s]*$/gim, function (match, row) {
+                if (row.includes('---')) return ''; // Skip separator row
+
+                const cells = row.split('|').map(c => c.trim());
+                if (cells[0] === '') cells.shift();
+                if (cells[cells.length - 1] === '') cells.pop();
+
+                const isHeader = match.includes('Fitur') || match.includes('Cara 1');
+
+                const cellHtml = cells.map((c) => {
+                    if (isHeader) {
+                        return `<th style="border: 1px solid var(--border-color); padding: 10px; text-align: left; background: var(--card-bg); font-weight: bold;">${c}</th>`;
+                    }
+                    return `<td style="border: 1px solid var(--border-color); padding: 10px; text-align: left;">${c}</td>`;
+                }).join('');
+
+                return `<tr>${cellHtml}</tr>`;
+            })
+            // Lists: Ordered and Unordered
+            .replace(/^\s*\d+\.\s+(.*$)/gim, '<li style="margin-bottom: 0.5rem; list-style-type: decimal; margin-left: 1.5rem;">$1</li>')
+            .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-bottom: 0.5rem; list-style-type: disc; margin-left: 2.5rem;">$1</li>');
+
+        // Wrap loose <tr> tags into a complete table
+        text = text.replace(/(<tr>.*?<\/tr>[\s\n]*)+/gim, function (match) {
+            const cleanRows = match.replace(/\n+/g, ''); // Remove newlines inside the table block
+            return `<div style="overflow-x: auto; margin: 1.5rem 0;"><table style="width: 100%; border-collapse: collapse; font-size: 0.95rem; border: 1px solid var(--border-color); background: var(--bg-color);"><tbody>${cleanRows}</tbody></table></div>`;
+        });
+
+        // Wrap loose <li> tags into <ul> or <ol>. To be safe and simple, we'll just wrap all consecutive <li>s in a <ul>, 
+        // since we explicitly defined list-style-type inline above.
+        text = text.replace(/(?:<li[^>]*>.*?<\/li>\s*)+/gim, function (match) {
+            const cleanList = match.replace(/\n+/g, ''); // strip internal newlines to avoid p tag breaks
+            return `<ul style="margin: 1rem 0; padding-left: 0;">${cleanList}</ul>`;
+        });
+
+        // Final step: convert double newlines to paragraphs
+        text = text.split('\n\n').filter(p => p.trim() !== '').map(p => {
+            // Don't wrap if it's already a block tag (like h1, h2, h3, hr, div, ul)
+            if (/^<(h\d|hr|div|ul|table|li)(.|\n)*>/.test(p.trim())) return p;
+            return `<p style="margin-bottom: 1rem;">${p}</p>`;
+        }).join('');
+
+        contentDiv.innerHTML = `<div style="font-size: 1.05rem;">${text}</div>`;
+        contentDiv.dataset.loaded = 'true';
+    } catch (error) {
+        contentDiv.innerHTML = '<p style="color:var(--danger); text-align:center;"><i class="ph ph-warning-circle" style="font-size: 2rem;"></i><br>Gagal memuat panduan upload (Panduan_Upload.md tidak ditemukan).</p>';
     }
 }
 function openCourseModal(course) {
