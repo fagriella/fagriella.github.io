@@ -935,9 +935,10 @@ function setupEventListeners() {
                 const isImageMode = imgFallback && imgFallback.style.display !== 'none';
 
                 if (isImageMode) {
-                    // Fullscreen modal-content agar gambar bisa terlihat penuh
-                    previewModalContent.requestFullscreen().catch(err => {
+                    // Fullscreen img langsung — hanya gambar, tanpa chrome/header
+                    imgFallback.requestFullscreen().catch(err => {
                         console.error(`Fullscreen error: ${err.message}`);
+                        previewModalContent.requestFullscreen();
                     });
                 } else {
                     previewFrame.requestFullscreen().catch(err => {
