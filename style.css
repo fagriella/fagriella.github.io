@@ -490,6 +490,35 @@ html[data-theme="dark"] .course-title {
     flex-grow: 1;
 }
 
+/* Gambar GitHub saat fullscreen: isi penuh layar, background hitam, tanpa chrome */
+#preview-img-fallback:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+    background: #000;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* Firefox */
+#preview-img-fallback:-moz-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Safari / old webkit */
+#preview-img-fallback:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
