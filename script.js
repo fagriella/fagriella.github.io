@@ -15,6 +15,26 @@ const MAHASISWA_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE
 const INFO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1266085536&single=true&output=csv';
 const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec'; // URL dari autosinkronmateri.gs
 
+// --- LISTENER REFRESH DARI IFRAME GAS.html ---
+// GAS.html mengirim { type: 'refresh' } setelah upload/hapus berhasil.
+// Sinkronisasi dan refresh data dilakukan diam-diam di belakang layar.
+window.addEventListener('message', async function (event) {
+    if (!event.data || event.data.type !== 'refresh') return;
+
+    try {
+        // 1. Panggil endpoint autosinkronmateri untuk update sheet dari Drive + GitHub
+        if (SYNC_SCRIPT_URL && !SYNC_SCRIPT_URL.includes('PASTE')) {
+            await fetch(SYNC_SCRIPT_URL, { mode: 'no-cors' }).catch(() => { });
+        }
+        // 2. Tunggu sebentar agar Google Sheets sempat update
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        // 3. Ambil ulang data dan render ulang UI tanpa reload
+        await refreshData();
+    } catch (e) {
+        await refreshData();
+    }
+});
+
 // State Data
 let coursesData = [];
 let materialsData = [];
