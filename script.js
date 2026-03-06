@@ -930,11 +930,21 @@ function setupEventListeners() {
     if (fullscreenBtn && previewModalContent && previewFrame) {
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                // Request fullscreen pada iframe langsung agar header tidak terlihat
-                previewFrame.requestFullscreen().catch(err => {
-                    console.error(`Error enabling fullscreen: ${err.message}`);
-                    previewModalContent.requestFullscreen(); // Fallback jika iframe gagal
-                });
+                // Cek apakah sedang tampil gambar (img fallback) atau iframe
+                const imgFallback = document.getElementById('preview-img-fallback');
+                const isImageMode = imgFallback && imgFallback.style.display !== 'none';
+
+                if (isImageMode) {
+                    // Fullscreen modal-content agar gambar bisa terlihat penuh
+                    previewModalContent.requestFullscreen().catch(err => {
+                        console.error(`Fullscreen error: ${err.message}`);
+                    });
+                } else {
+                    previewFrame.requestFullscreen().catch(err => {
+                        console.error(`Error enabling fullscreen: ${err.message}`);
+                        previewModalContent.requestFullscreen();
+                    });
+                }
             } else {
                 document.exitFullscreen();
             }
@@ -1999,12 +2009,15 @@ function showPreview(url, title) {
     if (isGithubRawImage) {
         frame.src = 'about:blank';
         frame.style.display = 'none';
+        // Aktifkan scroll di modal-body untuk gambar
+        const modalBody = frame.closest('.modal-body');
+        if (modalBody) modalBody.style.overflow = 'auto';
         // Hapus img preview lama jika ada
         let imgEl = document.getElementById('preview-img-fallback');
         if (!imgEl) {
             imgEl = document.createElement('img');
             imgEl.id = 'preview-img-fallback';
-            imgEl.style.cssText = 'max-width:100%; max-height:80vh; display:block; margin:auto; border-radius:8px;';
+            imgEl.style.cssText = 'max-width:100%; display:block; margin:auto; border-radius:8px; padding:8px;';
             frame.parentNode.insertBefore(imgEl, frame);
         }
         imgEl.src = url;
@@ -2013,6 +2026,9 @@ function showPreview(url, title) {
         // Sembunyikan img fallback jika ada
         const imgEl = document.getElementById('preview-img-fallback');
         if (imgEl) imgEl.style.display = 'none';
+        // Kembalikan overflow ke hidden untuk iframe
+        const modalBody = frame.closest('.modal-body');
+        if (modalBody) modalBody.style.overflow = 'hidden';
         frame.style.display = 'block';
         frame.src = url;
     }
