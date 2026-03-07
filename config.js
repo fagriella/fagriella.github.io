@@ -15,7 +15,7 @@ const INFO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZ
 
 // 2. Google Apps Script Web App URL (Utama)
 // Gunakan link Web App yang sudah dideploy dari autosinkronmateri.gs (Satu Projek)
-const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec';
+const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec';
 
 // 3. IFrame Upload URL (Biasanya sama dengan SYNC_SCRIPT_URL jika satu projek)
 const UPLOAD_IFRAME_URL = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec';
