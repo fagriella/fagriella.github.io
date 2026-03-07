@@ -489,7 +489,9 @@ function parseCSV(csvText) {
         const row = {};
         headers.forEach((header, index) => {
             // Hapus kutip di awal/akhir dari setiap nilai dan trim spasi
-            row[header] = (values[index] || '').trim().replace(/^"|"$/g, '');
+            // Translasi literal '\n' string kembali menjadi karakter newline sebenarnya
+            let val = (values[index] || '').replace(/^"|"$/g, '').trim();
+            row[header] = val.replace(/\\n/g, '\n');
         });
         return row;
     });
@@ -638,12 +640,16 @@ function openAssignmentModal(encodedData) {
                         <span class="badge" style="background:var(--danger); color:white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem;">Deadline: ${formatDate(t.deadline)}</span>
                     </div>
                     <div style="font-size:0.9rem; margin-bottom:0.5rem;"><strong>Dosen:</strong> ${t.lecturer}</div>
-                    <div style="background:var(--bg-color); padding:0.8rem; border-radius:6px; font-size:0.95rem;">${t.description}</div>
-                    ${t.note ? `
-                    <div style="margin-top: 0.75rem; padding: 0.5rem 0.8rem; background: rgba(230, 126, 34, 0.1); border-radius: 6px; font-size: 0.85rem;">
-                        <strong><i class="ph ph-note"></i> Catatan:</strong> ${t.note}
-                    </div>
-                    ` : ''}
+                    <div style="background:var(--bg-color); padding:0.8rem; border-radius:6px; font-size:0.95rem; white-space: pre-wrap;">${t.description}</div>
+                    ${t.note ? (function () {
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const linkedNote = t.note.replace(urlRegex, '<a href="$1" target="_blank" style="color:inherit; text-decoration:underline;">$1</a>');
+                    return `
+                        <div style="margin-top: 0.75rem; padding: 0.5rem 0.8rem; background: rgba(230, 126, 34, 0.1); border-radius: 6px; font-size: 0.85rem; white-space: pre-wrap;">
+                            <strong><i class="ph ph-note"></i> Catatan:</strong> ${linkedNote}
+                        </div>
+                        `;
+                })() : ''}
                     
                     <div style="margin-top: 0.5rem; text-align: right;">
                         <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0, 20)}...', 'Deadline: ${t.deadline}', null, 'tugas', event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
@@ -1785,12 +1791,13 @@ function renderModalContent(type) {
     // 1. Ambil materi dari materialsData yang cocok dengan nama course
     let materials = materialsData.filter(m => m.course === course.name);
 
-    // 2. SORTING: Urutkan berdasarkan tanggal (Terbaru di Atas)
-    // b.date - a.date = Descending
+    // 2. SORTING: Urutkan berdasarkan tanggal (Lama ke Baru / Terbaru di Bawah)
     materials.sort((a, b) => {
         const dateA = parseDateStr(a.date) || new Date(0);
         const dateB = parseDateStr(b.date) || new Date(0);
-        return dateB - dateA;
+        if (dateA - dateB !== 0) return dateA - dateB;
+        // Jika tanggal sama, urutkan nama file secara alfabetis
+        return a.filename.localeCompare(b.filename, 'id', { numeric: true, sensitivity: 'base' });
     });
 
 
@@ -1812,8 +1819,8 @@ function renderModalContent(type) {
             return;
         }
 
-        // Urutkan file secara natural (angka diurutkan sebagai angka, bukan teks)
-        docs.sort((a, b) => a.filename.localeCompare(b.filename, 'id', { numeric: true, sensitivity: 'base' }));
+        // File sudah diurutkan di atas (Date Asc -> Filename Asc)
+
 
         fileContainer.innerHTML = docs.map(m => {
             const { icon, color } = getFileIcon(m.type);
