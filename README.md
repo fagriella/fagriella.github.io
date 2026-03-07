@@ -9,6 +9,7 @@ Selamat datang di website **Arsip F.AGRIELLA**. Platform ini dirancang untuk mem
 Berikut adalah panduan lengkap cara menggunakan setiap fitur dan menu tambahan (sub-menu) yang ada di website ini:
 
 ### 1. 🏠 Beranda (Home)
+![Beranda](docs/images/beranda.webp)
 Halaman awal untuk melihat gambaran umum isi website.
 - **Pencarian Cepat:** Gunakan kolom pencarian di bagian atas untuk mencari nama mata kuliah, dosen, nama file, atau deskripsi tugas secara instan.
 - **Card Mata Kuliah (Sub-Menu Materi):** Klik pada kartu mata kuliah untuk membuka jendela detail (**Modal Detail Materi**). Di dalamnya terdapat dua tab:
@@ -26,6 +27,7 @@ Kumpulan dokumentasi visual yang dikelompokkan berdasarkan album.
 - **Melihat Foto:** Klik pada foto untuk membukanya dalam ukuran penuh (Lightbox) atau di tab baru.
 
 ### 3. 🎲 Spin (Undian)
+![Spin](docs/images/undi.webp)
 Alat pengundian acak dengan fitur kustomisasi tingkat lanjut.
 - **Input Data:** Masukkan daftar peserta di kolom kiri (satu nama per baris). Jumlah peserta akan terhitung otomatis di bagian atas.
 - **Mode Pilihan:** 
@@ -40,6 +42,7 @@ Alat pengundian acak dengan fitur kustomisasi tingkat lanjut.
     - **Reset:** Menghapus semua riwayat dan daftar nama untuk memulai sesi baru.
 
 ### 4. 📤 Upload Materi
+![Upload](docs/images/upload.webp)
 Kontribusikan materi, foto, atau tugas Anda ke dalam database bersama. Menu ini memiliki **5 Jenis Interaksi** utama:
 - **Langkah-Langkah Umum:**
     1. **Pilih Jenis Interaksi:** Pilih apakah Anda ingin upload Materi, Foto, Tugas, atau menggunakan AI.
@@ -57,6 +60,7 @@ Kontribusikan materi, foto, atau tugas Anda ke dalam database bersama. Menu ini 
 - **Panduan Upload (Sub-Menu Bantuan):** Klik ikon (?) di navbar saat berada di menu Upload untuk membuka panduan teknis mendalam tentang format file dan cara kontribusi yang benar.
 
 ### 5. ⚙️ Pengaturan (Settings)
+![Pengaturan](docs/images/pengaturan.webp)
 Menu untuk personalisasi pengalaman pengguna:
 - **Tema Gelap/Terang:** Klik ikon bulan/matahari untuk kenyamanan mata.
 - **Notifikasi Push (Webpushr):** 

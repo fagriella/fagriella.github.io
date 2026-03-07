@@ -1459,29 +1459,48 @@ function checkHashRoute() {
 // Fungsi load Markdown secara sederhana tanpa library eksternal
 async function loadTentangContent() {
     const contentDiv = document.getElementById('tentang-content');
-    if (contentDiv.dataset.loaded === 'true') return; // Cukup load 1x
+    if (!contentDiv || contentDiv.dataset.loaded === 'true') return;
 
     try {
         const response = await fetch('docs/tentang.md');
         if (!response.ok) throw new Error('File tidak ditemukan');
         let text = await response.text();
 
-        // Simple Markdown Parser
+        // Robust Simple Markdown Parser (Same as Panduan Upload)
         text = text
+            // Horizontal rule
+            .replace(/^---$/gim, '<hr style="margin: 2rem 0; border: 0; border-top: 1px dashed var(--border-color);">')
+            // Headers
             .replace(/^### (.*$)/gim, '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--brand-color);">$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--brand-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">$1</h2>')
+            .replace(/^## (.*$)/gim, '<h2 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">$1</h2>')
             .replace(/^# (.*$)/gim, '<h1 style="color: var(--brand-color); margin-bottom: 1rem;">$1</h1>')
-            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*)\*/gim, '<em>$1</em>')
+            // Bold & Italic
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            // Links
             .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank' style='color: var(--accent-color); text-decoration: none; font-weight: 600;'>$1</a>")
-            .replace(/\n\n/gim, '</p><p style="margin-bottom: 1rem;">')
-            .replace(/\n- (.*)/gim, '<ul><li style="margin-bottom: 0.5rem;">$1</li></ul>')
-        // .replace(/<\/ul>\s*<ul>/gim, ''); // Merge lists
+            // Inline code
+            .replace(/`(.*?)`/gim, '<code style="background: var(--card-bg); color: var(--accent-color); padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9em; font-family: monospace;">$1</code>')
+            // Lists: Ordered and Unordered
+            .replace(/^\s*\d+\.\s+(.*$)/gim, '<li style="margin-bottom: 0.5rem; list-style-type: decimal; margin-left: 1.5rem;">$1</li>')
+            .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-bottom: 0.5rem; list-style-type: disc; margin-left: 2.5rem;">$1</li>');
 
-        contentDiv.innerHTML = `<div style="font-size: 1.05rem;"><p>${text}</p></div>`;
+        // Wrap loose <li> tags into <ul>
+        text = text.replace(/(?:<li[^>]*>.*?<\/li>\s*)+/gim, function (match) {
+            const cleanList = match.replace(/\n+/g, '');
+            return `<ul style="margin: 1rem 0; padding-left: 0;">${cleanList}</ul>`;
+        });
+
+        // Final step: convert double newlines to paragraphs
+        text = text.split('\n\n').filter(p => p.trim() !== '').map(p => {
+            if (/^<(h\d|hr|div|ul|table|li)(.|\n)*>/.test(p.trim())) return p;
+            return `<p style="margin-bottom: 1rem;">${p}</p>`;
+        }).join('');
+
+        contentDiv.innerHTML = `<div style="font-size: 1.05rem;">${text}</div>`;
         contentDiv.dataset.loaded = 'true';
     } catch (error) {
-        contentDiv.innerHTML = '<p style="color:var(--danger); text-align:center;"><i class="ph ph-warning-circle" style="font-size: 2rem;"></i><br>Gagal memuat halaman tentang (tentang.md tidak ditemukan).</p>';
+        contentDiv.innerHTML = '<p style="color:var(--danger); text-align:center;"><i class="ph ph-warning-circle" style="font-size: 2rem;"></i><br>Gagal memuat halaman tentang (tentang.md bermasalah atau tidak ditemukan).</p>';
     }
 }
 
