@@ -70,26 +70,6 @@ self.addEventListener('fetch', function (event) {
     }
 });
 
-// ===== NOTIFICATION CLICK: Buka web saat notifikasi diklik =====
-self.addEventListener('notificationclick', function (event) {
-    event.notification.close();
-
-    // Buka website (atau fokus jika sudah terbuka)
-    event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(function (clientList) {
-            for (var i = 0; i < clientList.length; i++) {
-                var client = clientList[i];
-                if (client.url === '/' && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            if (clients.openWindow) {
-                return clients.openWindow('/');
-            }
-        })
-    );
-});
-
 // ===== PUSH: Handler untuk di masa depan jika ingin pakai Web Push asli (VAPID) =====
 self.addEventListener('push', function (event) {
     var data = { title: 'Update Baru', body: 'Ada materi/tugas baru di Arsip Kuliah.' };

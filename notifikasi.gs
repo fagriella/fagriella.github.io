@@ -39,26 +39,111 @@ function getLatestTask() {
 
 /**
  * Mencatat log subscriber ke tab baru
+ * Ditambah kolom Push Subscription untuk background notification
  */
-function logSubscription(status, info) {
+function logSubscription(status, info, pushSubscription) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SHEET_SUBSCRIBERS);
   
   // Buat sheet jika belum ada
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_SUBSCRIBERS);
-    sheet.appendRow(['Timestamp', 'Status', 'User Agent / Info']);
+    sheet.appendRow(['Timestamp', 'Status', 'User Agent / Info', 'Push Subscription']);
   }
 
-  sheet.appendRow([new Date(), status ? 'ON' : 'OFF', info]);
+  // Cari baris user ini jika sudah ada (berdasarkan Info browser) untuk update saja
+  // (Sederhana: Kita append saja atau update baris terakhir jika sama)
+  sheet.appendRow([new Date(), status ? 'ON' : 'OFF', info, pushSubscription || '']);
 }
 
 /**
- * Fungsi Inti (Legacy Cleanup): Sekarang tidak lagi menembak OneSignal
+ * FUNGSI INTI: Mengirim sinyal Push Native ke HP/Browser (Background)
+ * Menggunakan FCM (Firebase Cloud Messaging) Legacy API
+ */
+function broadcastPush(title, body, targetUrl) {
+  if (!FCM_SERVER_KEY || FCM_SERVER_KEY.includes('PASTE')) {
+    Logger.log("FCM_SERVER_KEY belum diisi. Lewati broadcast push.");
+    return;
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_SUBSCRIBERS);
+  if (!sheet) return;
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+
+  // Header: Timestamp, Status, Info, Push Subscription
+  const pushCol = 3; 
+  const statusCol = 1;
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (row[statusCol] !== 'ON') continue;
+
+    const subJson = row[pushCol];
+    if (!subJson) continue;
+
+    try {
+      const sub = JSON.parse(subJson);
+      // Ekstrak token dari endpoint (untuk Chrome/FCM) atau gunakan endpoint langsung
+      // FCM Legacy butuh token saja
+      const endpointParts = sub.endpoint.split('/');
+      const token = endpointParts[endpointParts.length - 1];
+
+      const payload = {
+        "to": token,
+        "data": {
+          "title": title,
+          "body": body,
+          "url": targetUrl || "https://fagriella.github.io/"
+        },
+        "notification": {
+          "title": title,
+          "body": body,
+          "icon": "https://fagriella.github.io/images/logo/icon-192.png",
+          "click_action": targetUrl || "https://fagriella.github.io/"
+        }
+      };
+
+      const options = {
+        "method": "post",
+        "contentType": "application/json",
+        "headers": {
+          "Authorization": "key=" + FCM_SERVER_KEY
+        },
+        "payload": JSON.stringify(payload),
+        "muteHttpExceptions": true
+      };
+
+      const response = UrlFetchApp.fetch("https://fcm.googleapis.com/fcm/send", options);
+      const resData = JSON.parse(response.getContentText());
+      
+      if (resData.success) successCount++;
+      else failCount++;
+
+    } catch (e) {
+      Logger.log("Gagal push ke baris " + (i+1) + ": " + e.message);
+      failCount++;
+    }
+  }
+
+  Logger.log(`Broadcast selesai. Berhasil: ${successCount}, Gagal: ${failCount}`);
+}
+
+/**
+ * Fungsi Inti: Sekarang memicu Broadcast Push saat ada trigger
  */
 function scheduleDeadlineNotification(course, taskDetail, deadlineStr) {
-  Logger.log("Sistem DIY: Melewati OneSignal. Notifikasi akan diambil via Polling oleh Browser.");
-  return "Sistem beralih ke DIY Polling.";
+  const title = "Deadline Besok!";
+  const body = `${course}: ${taskDetail}`;
+  const url = "https://fagriella.github.io/#tugas";
+  
+  broadcastPush(title, body, url);
+  return "Broadcast Push Terkirim.";
 }
 
 /**
@@ -66,29 +151,24 @@ function scheduleDeadlineNotification(course, taskDetail, deadlineStr) {
  * Jalankan setiap hari via Trigger (jam 7 pagi)
  */
 function checkAndSendReminders() {
-  const SPREADSHEET_ID = '1DXD3WmzwiOV9spBz0gAaK2l9Tmr4zYsyJ9-fY1RVL78';
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Assignments');
-  if (!sheet) { Logger.log("Sheet 'Assignments' tidak ditemukan!"); return; }
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_ASSIGNMENTS);
+  if (!sheet) { Logger.log("Sheet '" + SHEET_ASSIGNMENTS + "' tidak ditemukan!"); return; }
 
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) { Logger.log("Tidak ada data tugas."); return; }
 
-  // Header: [Date, Course, Lecturer, Description, Deadline, Note, Format, Link]
-  // Index:   0      1       2         3            4         5     6       7
   const headers = data[0];
   const deadlineCol = headers.findIndex(h => String(h).toLowerCase().includes('deadline'));
   const courseCol = headers.findIndex(h => String(h).toLowerCase().includes('course'));
   const descCol = headers.findIndex(h => String(h).toLowerCase().includes('description') || String(h).toLowerCase().includes('deskripsi'));
 
   if (deadlineCol === -1 || courseCol === -1) {
-    Logger.log("Kolom 'Deadline' atau 'Course' tidak ditemukan. Headers: " + headers.join(", "));
+    Logger.log("Kolom 'Deadline' atau 'Course' tidak ditemukan.");
     return;
   }
 
-  // "Besok" dari perspektif hari ini
   const now = new Date();
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
   let sentCount = 0;
 
   for (let i = 1; i < data.length; i++) {
@@ -96,58 +176,42 @@ function checkAndSendReminders() {
     const deadlineRaw = row[deadlineCol];
     if (!deadlineRaw) continue;
 
-    // Parse deadline (bisa Date object dari Sheets, atau string "DD-MM-YYYY HH:MM")
-    let dlDate;
-    if (deadlineRaw instanceof Date) {
-      dlDate = deadlineRaw;
-    } else {
-      dlDate = parseDeadlineStr(String(deadlineRaw));
-    }
+    let dlDate = (deadlineRaw instanceof Date) ? deadlineRaw : parseDeadlineStr(String(deadlineRaw));
     if (!dlDate || isNaN(dlDate.getTime())) continue;
 
-    // Cek apakah deadline-nya BESOK (tanggal sama)
     if (dlDate.getFullYear() === tomorrow.getFullYear() &&
         dlDate.getMonth() === tomorrow.getMonth() &&
         dlDate.getDate() === tomorrow.getDate()) {
 
       const course = row[courseCol] || "Mata Kuliah";
       const desc = descCol !== -1 ? (row[descCol] || "Ada tugas!") : "Ada tugas!";
-
-      Logger.log("Kirim pengingat: " + course + " - " + desc + " (DL: " + deadlineRaw + ")");
-
-      try {
-        scheduleDeadlineNotification(course, desc, dlDate.toISOString());
-        sentCount++;
-      } catch (e) {
-        Logger.log("Gagal kirim untuk " + course + ": " + e.message);
-      }
+      
+      scheduleDeadlineNotification(course, desc, dlDate.toISOString());
+      sentCount++;
     }
   }
-
   Logger.log("Selesai. Total pengingat terkirim: " + sentCount);
 }
 
 /**
- * Helper: Parse string deadline "DD-MM-YYYY HH:MM" atau "DD/MM/YYYY"
+ * Memancarkan notifikasi untuk tugas paling baru (dipanggil saat tambah data baru)
+ */
+function broadcastNewTask(course, description) {
+  broadcastPush("Tugas Baru!", `${course}: ${description}`, "https://fagriella.github.io/#tugas");
+}
+
+/**
+ * Helper: Parse string deadline "DD-MM-YYYY HH:MM"
  */
 function parseDeadlineStr(str) {
   if (!str) return null;
   const [dateStr, timeStr] = str.trim().split(/\s+/);
-  const cleanD = dateStr.replace(/\//g, '-');
-  const parts = cleanD.split('-');
+  const parts = dateStr.replace(/\//g, '-').split('-');
   if (parts.length !== 3) return null;
 
   let [p1, p2, p3] = parts.map(n => parseInt(n, 10));
-  if (isNaN(p1) || isNaN(p2) || isNaN(p3)) return null;
-
-  let dateObj;
-  if (p1 > 31) { // YYYY-MM-DD
-    dateObj = new Date(p1, p2 - 1, p3);
-  } else { // DD-MM-YYYY
-    let year = p3;
-    if (year < 100) year += 2000;
-    dateObj = new Date(year, p2 - 1, p1);
-  }
+  let year = p3 < 100 ? p3 + 2000 : p3;
+  let dateObj = new Date(year, p2 - 1, p1);
 
   if (timeStr) {
     const [h, m] = timeStr.split(':').map(n => parseInt(n, 10));
@@ -156,7 +220,6 @@ function parseDeadlineStr(str) {
   } else {
     dateObj.setHours(23, 59, 0);
   }
-
   return dateObj;
 }
 
@@ -164,34 +227,19 @@ function parseDeadlineStr(str) {
  * Jalankan SEKALI untuk memasang trigger harian jam 7 pagi
  */
 function setupDailyTrigger() {
-  // Hapus trigger lama (jika ada) agar tidak ganda
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(t => {
-    if (t.getHandlerFunction() === 'checkAndSendReminders') {
-      ScriptApp.deleteTrigger(t);
-    }
+    if (t.getHandlerFunction() === 'checkAndSendReminders') ScriptApp.deleteTrigger(t);
   });
 
-  // Pasang trigger baru: setiap hari jam 7-8 pagi WIB
   ScriptApp.newTrigger('checkAndSendReminders')
-    .timeBased()
-    .everyDays(1)
-    .atHour(7)
-    .nearMinute(0)
-    .inTimezone('Asia/Jakarta')
-    .create();
-
-  Logger.log("Trigger harian 'checkAndSendReminders' terpasang (07:00 WIB)");
+    .timeBased().everyDays(1).atHour(7).nearMinute(0).inTimezone('Asia/Jakarta').create();
+  Logger.log("Trigger harian terpasang (07:00 WIB)");
 }
 
 /**
- * FUNGSI TESTING (Bisa diklik "Jalankan" langsung dari editor)
+ * FUNGSI TESTING
  */
-function testNotification() {
-  // Test langsung kirim pengingat untuk tugas fiktif yang DL-nya besok
-  const tgs1 = new Date();
-  tgs1.setDate(tgs1.getDate() + 1);
-  tgs1.setHours(14, 0, 0, 0);
-
-  scheduleDeadlineNotification("MK Simulasi", "Tugas Praktek Jarkom", tgs1.toISOString());
+function testPushNotification() {
+  broadcastPush("Test Notifikasi DIY", "Muncul kan? Meskipun browser ditutup!", "https://fagriella.github.io/");
 }

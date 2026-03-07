@@ -14,6 +14,7 @@ const ARSIP_FOTO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT
 const MAHASISWA_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1814680259&single=true&output=csv'; // GANTI GID INI DENGAN TAB MAHASISWA
 const INFO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1266085536&single=true&output=csv';
 const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec'; // URL dari autosinkronmateri.gs
+const VAPID_PUBLIC_KEY = 'BKF4yAYG3ppTj1CEMns_VS20AekWkpZds9Tqjgs3oM5DOSTH0waPtEZUs9Y8sDI_nx-aidZdJQNq6dRkJISUUiE';
 
 // --- LISTENER REFRESH DARI IFRAME GAS.html ---
 // GAS.html mengirim { type: 'refresh' } setelah upload/hapus berhasil.
@@ -24,7 +25,8 @@ window.addEventListener('message', async function (event) {
     try {
         // 1. Panggil endpoint autosinkronmateri untuk update sheet dari Drive + GitHub
         if (SYNC_SCRIPT_URL && !SYNC_SCRIPT_URL.includes('PASTE')) {
-            await fetch(SYNC_SCRIPT_URL, { mode: 'no-cors' }).catch(() => { });
+            const syncUrl = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=sync`;
+            await fetch(syncUrl, { mode: 'no-cors' }).catch(() => { });
         }
         // 2. Tunggu sebentar agar Google Sheets sempat update
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -49,7 +51,8 @@ document.addEventListener('keydown', async function (e) {
         try {
             // 1. Eksekusi script sinkronisasi (GitHub -> Drive -> Sheets)
             if (SYNC_SCRIPT_URL && !SYNC_SCRIPT_URL.includes('PASTE')) {
-                await fetch(SYNC_SCRIPT_URL, { mode: 'no-cors' }).catch(() => { });
+                const syncUrl = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=sync`;
+                await fetch(syncUrl, { mode: 'no-cors' }).catch(() => { });
             }
             // 2. Tunggu 3 detik agar eksekusi script di server kelar
             await new Promise(resolve => setTimeout(resolve, 3000));
@@ -147,17 +150,11 @@ function initCookieConsent() {
         localStorage.setItem('consent_personalization', 'true');
         localStorage.setItem('consent_notifications', 'true');
 
-        // Minta ijin notifikasi langsung (User Gesture)
-        if (Notification.permission === 'default') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    logSubscriptionToGAS(true);
-                    showLocalNotification("Sistem Diaktifkan", "Terima kasih telah berlangganan!");
-                }
-            });
-        } else if (Notification.permission === 'granted') {
-            logSubscriptionToGAS(true);
-        }
+        // Minta ijin notifikasi & Push Native
+        subscribeToPush().then(sub => {
+            logSubscriptionToGAS(true, sub);
+            if (sub) showLocalNotification("Sistem Diaktifkan", "Terima kasih telah berlangganan!");
+        });
 
         hideBanner();
     };
@@ -182,17 +179,11 @@ function initCookieConsent() {
                 localStorage.setItem('consent_notifications', isEnabled);
 
                 if (isEnabled) {
-                    // Minta ijin browser jika belum
-                    if (Notification.permission !== 'granted') {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === 'granted') {
-                                logSubscriptionToGAS(true);
-                                showLocalNotification("Sistem diaktifkan!", "Anda akan menerima notifikasi tugas baru.");
-                            }
-                        });
-                    } else {
-                        logSubscriptionToGAS(true);
-                    }
+                    // Minta ijin browser & Langganan Push Native jika belum
+                    subscribeToPush().then(sub => {
+                        logSubscriptionToGAS(true, sub);
+                        if (sub) showLocalNotification("Sistem Diaktifkan", "Anda akan menerima notifikasi meskipun web ditutup.");
+                    });
                 } else {
                     logSubscriptionToGAS(false);
                 }
@@ -3087,10 +3078,58 @@ function generateAndRenderGroups(names, numGroups, container) {
 // ================== DIY NOTIFIKASI HELPER ==================
 
 /** Mencatat status langganan ke Google Sheets */
-function logSubscriptionToGAS(status) {
+function logSubscriptionToGAS(status, subscription = null) {
     if (!SYNC_SCRIPT_URL || SYNC_SCRIPT_URL.includes('PASTE')) return;
-    const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=subscribe&status=${status}&info=${encodeURIComponent(navigator.userAgent)}`;
+
+    let url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=subscribe&status=${status}&info=${encodeURIComponent(navigator.userAgent)}`;
+
+    // Tambahkan data push subscription jika ada (JSON string)
+    if (subscription) {
+        url += `&subscription=${encodeURIComponent(JSON.stringify(subscription))}`;
+    }
+
     fetch(url, { mode: 'no-cors' }).catch(() => { });
+}
+
+/** Melakukan registrasi Web Push Native (VAPID) agar notifikasi masuk saat browser tutup */
+async function subscribeToPush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+
+        // Cek jika sudah ada subscription
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+            // Subscribe baru dengan VAPID key
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+
+        return subscription;
+    } catch (err) {
+        console.error("Gagal subscribe Web Push:", err);
+        // Fallback jika Push gagal, minimal minta ijin Notification standard
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+        return null;
+    }
+}
+
+/** Helper: Mengonversi VAPID key String ke Uint8Array */
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
 }
 
 /** Menampilkan notifikasi lokal di browser */

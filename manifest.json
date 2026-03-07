@@ -44,5 +44,6 @@
             "url": "/#tugas",
             "description": "Lihat daftar tugas"
         }
-    ]
+    ],
+    "gcm_sender_id": "103953800507"
 }
