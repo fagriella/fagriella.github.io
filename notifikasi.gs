@@ -1,38 +1,7 @@
-// ================== KONFIGURASI DIY NOTIFIKASI ==================
-const SPREADSHEET_ID = '1DXD3WmzwiOV9spBz0gAaK2l9Tmr4zYsyJ9-fY1RVL78';
-const SHEET_ASSIGNMENTS = 'Assignments';
-const SHEET_SUBSCRIBERS = 'Subscribers';
-
 /**
- * Endpoint GET: Digunakan oleh Service Worker untuk polling atau pendaftaran
+ * DIY Notifikasi Logic
+ * (doGet sekarang dikelola secara terpusat di autosinkronmateri.gs)
  */
-function doGet(e) {
-  const action = e.parameter.action;
-
-  try {
-    if (action === 'get_latest') {
-      const latest = getLatestTask();
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'success',
-        data: latest
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (action === 'subscribe') {
-      const status = e.parameter.status === 'true';
-      const info = e.parameter.info || 'Unknown Browser';
-      logSubscription(status, info);
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Action tidak dikenal' }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
 
 /**
  * Webhook Entry (POST): Tetap dipertahankan jika ada bot lain yang memicu notifikasi

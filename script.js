@@ -88,6 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     initData(); // Mulai fetch data
 
+    // Auto-prompt jika belum pernah ditanya (Mirip OneSignal)
+    setTimeout(() => {
+        if (Notification.permission === 'default' && localStorage.getItem('cookieConsent') === 'true') {
+            // Tampilkan kembali banner atau prompt khusus jika user sudah accept cookie tapi belum pilih notif
+            const banner = document.getElementById('cookie-consent-banner');
+            if (banner && !banner.classList.contains('show')) {
+                const text = banner.querySelector('p');
+                if (text) text.innerHTML = "<strong>Ingin menerima notifikasi tugas baru?</strong><br>Aktifkan notifikasi browser untuk mendapatkan pengingat otomatis.";
+                banner.classList.add('show');
+            }
+        }
+    }, 3000);
 });
 
 function initCookieConsent() {
@@ -133,6 +145,20 @@ function initCookieConsent() {
     const acceptAll = () => {
         localStorage.setItem('cookieConsent', 'true');
         localStorage.setItem('consent_personalization', 'true');
+        localStorage.setItem('consent_notifications', 'true');
+
+        // Minta ijin notifikasi langsung (User Gesture)
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    logSubscriptionToGAS(true);
+                    showLocalNotification("Sistem Diaktifkan", "Terima kasih telah berlangganan!");
+                }
+            });
+        } else if (Notification.permission === 'granted') {
+            logSubscriptionToGAS(true);
+        }
+
         hideBanner();
     };
 
