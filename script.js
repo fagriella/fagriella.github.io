@@ -98,6 +98,7 @@ function initCookieConsent() {
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
     const personalizationToggle = document.getElementById('consent-personalization-toggle');
+    const notificationToggle = document.getElementById('consent-notification-toggle');
 
     if (!banner) return;
 
@@ -113,6 +114,19 @@ function initCookieConsent() {
     const openSettingsModal = () => {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
+
+        // Cek status notif dari OneSignal (Ganya jika HTTPS & dilingkungan GAS)
+        if (notificationToggle && location.protocol === 'https:') {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.OneSignalDeferred.push(async function (OneSignal) {
+                notificationToggle.checked = OneSignal.User.PushSubscription.optedIn;
+            });
+        } else if (notificationToggle) {
+            notificationToggle.disabled = true;
+            const notifMsg = notificationToggle.closest('.cookie-pref-item').querySelector('p');
+            if (notifMsg) notifMsg.innerHTML += '<br><small style="color:var(--danger)">* Notifikasi hanya aktif di GitHub Pages (HTTPS).</small>';
+        }
+
         settingsModal.classList.add('active');
     };
 
@@ -138,6 +152,18 @@ function initCookieConsent() {
             hideBanner();
             closeSettingsModal();
 
+            // Simpan status notifikasi ke OneSignal (Hanya jika HTTPS)
+            if (notificationToggle && !notificationToggle.disabled && location.protocol === 'https:') {
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                window.OneSignalDeferred.push(async function (OneSignal) {
+                    if (notificationToggle.checked) {
+                        await OneSignal.User.PushSubscription.optIn();
+                    } else {
+                        await OneSignal.User.PushSubscription.optOut();
+                    }
+                });
+            }
+
             // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
             if (!personalizationToggle.checked) {
                 localStorage.removeItem('theme');
@@ -159,6 +185,30 @@ function initCookieConsent() {
     if (rejectBtn) rejectBtn.addEventListener('click', rejectAll);
     manageBtn.addEventListener('click', openSettingsModal);
     savePrefsBtn.addEventListener('click', savePreferences);
+
+    // Test Notification via GAS
+    const testNotifBtn = document.getElementById('btn-test-notif');
+    if (testNotifBtn) {
+        testNotifBtn.addEventListener('click', () => {
+            const originalHTML = testNotifBtn.innerHTML;
+            testNotifBtn.disabled = true;
+            testNotifBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Mengirim...';
+
+            google.script.run
+                .withSuccessHandler(() => {
+                    alert('Test Notifikasi berhasil dipicu lewat notifikasi.gs! Periksa perangkat Anda.');
+                    testNotifBtn.disabled = false;
+                    testNotifBtn.innerHTML = originalHTML;
+                })
+                .withFailureHandler((err) => {
+                    alert('Gagal mengirim test via GAS: ' + err);
+                    testNotifBtn.disabled = false;
+                    testNotifBtn.innerHTML = originalHTML;
+                })
+                .testNotification(); // Fungsi di notifikasi.gs
+        });
+    }
+
     setTimeout(() => {
         showBanner();
     }, 1500);
@@ -645,17 +695,19 @@ function openAssignmentModal(encodedData) {
                     const urlRegex = /(https?:\/\/[^\s]+)/g;
                     const linkedNote = t.note.replace(urlRegex, '<a href="$1" target="_blank" style="color:inherit; text-decoration:underline;">$1</a>');
                     return `
-                        <div style="margin-top: 0.75rem; padding: 0.5rem 0.8rem; background: rgba(230, 126, 34, 0.1); border-radius: 6px; font-size: 0.85rem; white-space: pre-wrap;">
-                            <strong><i class="ph ph-note"></i> Catatan:</strong> ${linkedNote}
+                        <div style="margin-top: 1rem; border-top: 1px dashed rgba(230, 126, 34, 0.3); padding-top: 0.75rem;">
+                            <div style="font-weight: bold; color: #e67e22; font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="ph ph-note"></i> Catatan/Link Penting:
+                            </div>
+                            <div style="background: rgba(230, 126, 34, 0.05); padding: 0.8rem; border-radius: 6px; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; border-left: 3px solid #e67e22;">${linkedNote}</div>
                         </div>
                         `;
                 })() : ''}
                     
                     <div style="margin-top: 0.5rem; text-align: right;">
-                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0, 20)}...', 'Deadline: ${t.deadline}', null, 'tugas', event)" class="list-bookmark-btn" title="Simpan Tugas" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <button onclick="toggleBookmark('${generateId(t)}', 'tugas', '${t.course} - ${t.description.substring(0, 20)}...', 'Deadline: ${t.deadline}', null, 'tugas', event)" class="list-bookmark-btn" title="Simpan" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-color); border: 1px solid var(--border-color);">
                             <i class="${isBookmarked(generateId(t)) ? 'ph-fill' : 'ph'} ph-star" 
-                               style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}; font-size: 1.2rem;"></i>
-                            <span style="font-size: 0.9rem; color: var(--text-secondary);">Simpan Tugas</span>
+                               style="color: ${isBookmarked(generateId(t)) ? 'var(--accent-color)' : 'var(--text-secondary)'}; font-size: 1.25rem;"></i>
                         </button>
                     </div>
                 </div>
@@ -877,42 +929,7 @@ function setupEventListeners() {
     });
 
 
-    // Notification Settings Button (Inside Modal)
-    const notifSettingsBtn = document.getElementById('btn-check-notif-settings');
-    if (notifSettingsBtn) {
-        notifSettingsBtn.addEventListener('click', () => {
-            window.OneSignalDeferred.push(async function (OneSignal) {
-                const permission = Notification.permission; // browser native: 'granted', 'denied', 'default'
-                const isSubscribed = OneSignal.User.PushSubscription.optedIn;
 
-                let statusMessage = 'Status Langganan: ' + (isSubscribed ? 'Terdaftar' : 'Belum Terdaftar') + '\n';
-                statusMessage += 'Izin Browser: ' + permission.toUpperCase();
-
-                if (isSubscribed) {
-                    const sendTest = confirm(statusMessage + '\n\nNotifikasi aktif.\nKlik OK untuk mengirim notifikasi test ke perangkat ini.');
-                    if (sendTest) {
-                        try {
-                            new Notification('Test Notifikasi - F.AGRIELLA', {
-                                body: 'Notifikasi berhasil! Kamu akan menerima pengingat tugas di perangkat ini.',
-                                icon: '/images/logo/F.AGRIELLA.webp'
-                            });
-                            alert('Notifikasi test terkirim! Cek notifikasi di perangkat kamu.');
-                        } catch (e) {
-                            alert('Gagal mengirim test: ' + e.message);
-                        }
-                    }
-                } else if (permission === 'denied') {
-                    alert(statusMessage + '\n\nNotifikasi diblokir oleh browser. Untuk mengaktifkan:\n1. Klik ikon gembok di address bar\n2. Cari "Notifications" atau "Notifikasi"\n3. Ubah ke "Allow" / "Izinkan"\n4. Refresh halaman');
-                } else {
-                    const confirm_ = confirm(statusMessage + '\n\nKamu belum berlangganan notifikasi.\nKlik OK untuk mengaktifkan notifikasi pengingat tugas.');
-                    if (confirm_) {
-                        await OneSignal.User.PushSubscription.optIn();
-                        alert('Notifikasi berhasil diaktifkan! Kamu akan menerima pengingat tugas.');
-                    }
-                }
-            });
-        });
-    }
 
     // Filter Semester
     document.getElementById('semester-filter').addEventListener('change', (e) => {

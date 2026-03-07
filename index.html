@@ -57,14 +57,19 @@
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "7b989f90-3334-4827-a3cd-b9738e971ab3",
-                notifyButton: {
-                    enable: true,
-                },
+        // Only initialize OneSignal on HTTPS
+        if (location.protocol === 'https:') {
+            OneSignalDeferred.push(async function (OneSignal) {
+                await OneSignal.init({
+                    appId: "7b989f90-3334-4827-a3cd-b9738e971ab3",
+                    notifyButton: {
+                        enable: true,
+                    },
+                });
             });
-        });
+        } else {
+            console.warn("OneSignal (Push Notifications) requires HTTPS. SDK initialization skipped for HTTP.");
+        }
     </script>
     <link rel="stylesheet" href="style.css">
     <script>
@@ -450,13 +455,17 @@
                 <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Anda dapat mengontrol penyimpanan data
                     di browser Anda. Pilihan Anda akan disimpan untuk kunjungan berikutnya.</p>
                 <div class="cookie-pref-item">
-                    <h4>Penyimpanan Fungsional</h4>
-                    <p>Selalu aktif. Diperlukan agar situs dapat berfungsi dengan benar.</p>
+                    <div class="cookie-pref-info">
+                        <h4>Penyimpanan Fungsional</h4>
+                        <p>Selalu aktif. Diperlukan agar situs dapat berfungsi dengan benar.</p>
+                    </div>
                 </div>
                 <div class="cookie-pref-item">
-                    <h4>Preferensi & Personalisasi</h4>
-                    <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai
-                        (Bookmark).</p>
+                    <div class="cookie-pref-info">
+                        <h4>Preferensi & Personalisasi</h4>
+                        <p>Izinkan situs menyimpan preferensi tampilan (seperti Tema Gelap) dan item yang Anda tandai
+                            (Bookmark).</p>
+                    </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="consent-personalization-toggle">
                         <span class="slider"></span>
@@ -464,11 +473,18 @@
                 </div>
 
                 <div class="cookie-pref-item">
-                    <h4>Notifikasi</h4>
-                    <p>Kelola izin notifikasi untuk tugas baru.</p>
-                    <button id="btn-check-notif-settings"
-                        style="background: var(--stone-grey); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem;">Cek
-                        Status</button>
+                    <div class="cookie-pref-info">
+                        <h4>Notifikasi</h4>
+                        <p>Kelola izin notifikasi untuk tugas baru.</p>
+                        <button id="btn-test-notif"
+                            style="background: var(--stone-grey); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 0.8rem; border-radius: 50px; cursor: pointer; font-size: 0.75rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 4px;">
+                            <i class="ph ph-bell"></i> Kirim Test
+                        </button>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="consent-notification-toggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
