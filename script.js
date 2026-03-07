@@ -122,9 +122,13 @@ function initCookieConsent() {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
 
-        // Cerminkan persetujuan notifikasi dengan status OS/Browser native
+        // Cerminkan persetujuan notifikasi dengan sinkronisasi OS/Browser dan state lokal
         if (notificationToggle) {
-            notificationToggle.checked = (Notification.permission === 'granted');
+            if (Notification.permission === 'granted') {
+                notificationToggle.checked = localStorage.getItem('consent_notifications') !== 'false';
+            } else {
+                notificationToggle.checked = false;
+            }
         }
 
         settingsModal.classList.add('active');
@@ -191,8 +195,9 @@ function initCookieConsent() {
 
     // Kustom logic untuk mengontrol proxy click ke Webpushr button 
     if (notificationToggle) {
-        notificationToggle.addEventListener('click', (e) => {
-            e.preventDefault(); // Jangan ganti visual checkbox sebelum prompt selesai/ditekan
+        notificationToggle.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            localStorage.setItem('consent_notifications', isChecked);
 
             // Klik button Webpushr yang disembunyikan
             const wpBtn = document.querySelector('#webpushr-subscription-toggle-button');
@@ -202,12 +207,20 @@ function initCookieConsent() {
                 else wpBtn.click();
             }
 
-            // Polling untuk memperbarui switch toggle berdasarkan respon user
-            let checkCount = 0;
-            const poller = setInterval(() => {
-                notificationToggle.checked = (Notification.permission === 'granted');
-                if (++checkCount > 20) clearInterval(poller); // 10 detik timeout
-            }, 500);
+            if (isChecked) {
+                // Polling untuk memastikan kalau permission ditolak, toggle kembali false
+                let checkCount = 0;
+                const poller = setInterval(() => {
+                    if (Notification.permission === 'denied') {
+                        notificationToggle.checked = false;
+                        localStorage.setItem('consent_notifications', 'false');
+                        clearInterval(poller);
+                    } else if (Notification.permission === 'granted') {
+                        clearInterval(poller);
+                    }
+                    if (++checkCount > 20) clearInterval(poller); // 10 detik timeout
+                }, 500);
+            }
         });
     }
 
