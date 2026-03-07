@@ -20,6 +20,8 @@ const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80
 // 3. IFrame Upload URL (Biasanya sama dengan SYNC_SCRIPT_URL jika satu projek)
 const UPLOAD_IFRAME_URL = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec';
 
-// 4. ntfy.sh Configuration (Notifikasi Background)
+// 5. Ntfy.sh Configuration (Topic 'fagriella')
 const NTFY_TOPIC = 'fagriella';
-const NTFY_URL = 'https://ntfy.sh/' + NTFY_TOPIC;
+const NTFY_URL = `https://ntfy.sh/${NTFY_TOPIC}`;
+const NTFY_GATEWAY_URL = 'https://ntfy.sh/v1/webpush';
+const NTFY_VAPID_PUBLIC_KEY = 'BEMjM0sNxh41x0a6Lz3YaqkJ7AUhZefxsOQgw-at69i0fM1CybVBcj7-QQXf4N_tPCgFnOXdRbQ5jrSrr9Yg9Lc';

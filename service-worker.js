@@ -70,3 +70,49 @@ self.addEventListener('fetch', function (event) {
         );
     }
 });
+
+// ===== PUSH: Tangkap notifikasi dari ntfy.sh =====
+self.addEventListener('push', function (event) {
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (e) {
+        data = { message: event.data ? event.data.text() : 'Notifikasi Baru' };
+    }
+
+    const title = data.title || 'Info Baru - F.AGRIELLA';
+    const options = {
+        body: data.message || data.body || 'Ada pembaruan di Arsip Kuliah.',
+        icon: '/images/logo/F.AGRIELLA.webp',
+        badge: '/images/logo/F.AGRIELLA.webp',
+        vibrate: [200, 100, 200],
+        tag: 'ntfy-push',
+        data: {
+            url: data.click || data.url || self.location.origin
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+// ===== NOTIFICATION CLICK: Buka URL saat diklik =====
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    const urlToOpen = event.notification.data.url;
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === urlToOpen && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
+});
