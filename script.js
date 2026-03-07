@@ -115,16 +115,14 @@ function initCookieConsent() {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
 
-        // Cek status notif dari OneSignal (Ganya jika HTTPS & dilingkungan GAS)
-        if (notificationToggle && location.protocol === 'https:') {
-            window.OneSignalDeferred = window.OneSignalDeferred || [];
-            window.OneSignalDeferred.push(async function (OneSignal) {
-                notificationToggle.checked = OneSignal.User.PushSubscription.optedIn;
-            });
-        } else if (notificationToggle) {
-            notificationToggle.disabled = true;
-            const notifMsg = notificationToggle.closest('.cookie-pref-item').querySelector('p');
-            if (notifMsg) notifMsg.innerHTML += '<br><small style="color:var(--danger)">* Notifikasi hanya aktif di GitHub Pages (HTTPS).</small>';
+        // Cek status notif dari Browser Native (Universal)
+        if (notificationToggle) {
+            if (Notification.permission === 'granted') {
+                notificationToggle.checked = localStorage.getItem('consent_notifications') === 'true';
+            } else {
+                notificationToggle.checked = false;
+                localStorage.setItem('consent_notifications', 'false');
+            }
         }
 
         settingsModal.classList.add('active');
@@ -152,16 +150,26 @@ function initCookieConsent() {
             hideBanner();
             closeSettingsModal();
 
-            // Simpan status notifikasi ke OneSignal (Hanya jika HTTPS)
-            if (notificationToggle && !notificationToggle.disabled && location.protocol === 'https:') {
-                window.OneSignalDeferred = window.OneSignalDeferred || [];
-                window.OneSignalDeferred.push(async function (OneSignal) {
-                    if (notificationToggle.checked) {
-                        await OneSignal.User.PushSubscription.optIn();
+            // Simpan status notifikasi secara Lokal & ke GAS (DIY)
+            if (notificationToggle && !notificationToggle.disabled) {
+                const isEnabled = notificationToggle.checked;
+                localStorage.setItem('consent_notifications', isEnabled);
+
+                if (isEnabled) {
+                    // Minta ijin browser jika belum
+                    if (Notification.permission !== 'granted') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                logSubscriptionToGAS(true);
+                                showLocalNotification("Sistem diaktifkan!", "Anda akan menerima notifikasi tugas baru.");
+                            }
+                        });
                     } else {
-                        await OneSignal.User.PushSubscription.optOut();
+                        logSubscriptionToGAS(true);
                     }
-                });
+                } else {
+                    logSubscriptionToGAS(false);
+                }
             }
 
             // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
@@ -200,7 +208,9 @@ function initCookieConsent() {
 
                 fetch(testUrl, { mode: 'no-cors' })
                     .then(() => {
-                        alert('Permintaan Test Notifikasi terkirim! Silakan periksa perangkat Anda.');
+                        // Tampilkan notifikasi lokal sebagai bukti browser bisa me-render
+                        showLocalNotification("Test Notifikasi", "Permintaan test terkirim ke server!");
+                        alert('Permintaan Test Notifikasi terkirim! Periksa notifikasi browser Anda.');
                         testNotifBtn.disabled = false;
                         testNotifBtn.innerHTML = originalHTML;
                     })
@@ -3047,3 +3057,62 @@ function generateAndRenderGroups(names, numGroups, container) {
 
     container.innerHTML = htmlContent;
 }
+
+// ================== DIY NOTIFIKASI HELPER ==================
+
+/** Mencatat status langganan ke Google Sheets */
+function logSubscriptionToGAS(status) {
+    if (!SYNC_SCRIPT_URL || SYNC_SCRIPT_URL.includes('PASTE')) return;
+    const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=subscribe&status=${status}&info=${encodeURIComponent(navigator.userAgent)}`;
+    fetch(url, { mode: 'no-cors' }).catch(() => { });
+}
+
+/** Menampilkan notifikasi lokal di browser */
+function showLocalNotification(title, body) {
+    if (!("Notification" in window) || Notification.permission !== 'granted') return;
+
+    // Cek jika Service Worker aktif (lebih baik untuk notifikasi)
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+                body: body,
+                icon: 'images/logo/F.AGRIELLA.webp',
+                badge: 'images/logo/F.AGRIELLA.webp',
+                vibrate: [200, 100, 200],
+                tag: 'task-update'
+            });
+        });
+    } else {
+        // Fallback ke Notification standard
+        new Notification(title, { body: body, icon: 'images/logo/F.AGRIELLA.webp' });
+    }
+}
+
+/** Loop pengecekan tugas baru (saat tab dibuka) */
+function checkNewTasksLoop() {
+    if (localStorage.getItem('consent_notifications') !== 'true') return;
+    if (!SYNC_SCRIPT_URL || SYNC_SCRIPT_URL.includes('PASTE')) return;
+
+    const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=get_latest`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success' && res.data) {
+                const latestTask = res.data;
+                const lastSeenId = localStorage.getItem('last_seen_task_id');
+
+                if (lastSeenId && parseInt(lastSeenId) < latestTask.id) {
+                    showLocalNotification("Tugas Baru Terdeteksi!", `${latestTask.course}: ${latestTask.description}`);
+                }
+                localStorage.setItem('last_seen_task_id', latestTask.id);
+            }
+        })
+        .catch(() => { });
+
+    // Cek setiap 5 menit saat tab aktif
+    setTimeout(checkNewTasksLoop, 5 * 60 * 1000);
+}
+
+// Jalankan loop saat awal
+setTimeout(checkNewTasksLoop, 5000);

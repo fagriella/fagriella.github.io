@@ -1,109 +1,95 @@
-// ================== KONFIGURASI ONESIGNAL ==================
-const ONESIGNAL_APP_ID = "7b989f90-3334-4827-a3cd-b9738e971ab3"; 
-const ONESIGNAL_REST_API_KEY = "os_v2_app_pomj7ebtgrecpi6nxfzy5fy2wmsi4mp2k6duwcn22rvyyrgbreqc55t4yctweceezr4kjfc5ejewxp3tx43bfmjratdisadeclbzhvy";
+// ================== KONFIGURASI DIY NOTIFIKASI ==================
+const SPREADSHEET_ID = '1DXD3WmzwiOV9spBz0gAaK2l9Tmr4zYsyJ9-fY1RVL78';
+const SHEET_ASSIGNMENTS = 'Assignments';
+const SHEET_SUBSCRIBERS = 'Subscribers';
 
 /**
- * Webhook Entry/Endpoint:
- * Gunakan fungsi ini jika notifikasi akan dipicu oleh request/URL luar (HTTP POST)
- * Misalnya mengirimkan JSON { "course": "Matematika", "description": "Tugas 1", "deadline": "2024-01-20 14:00" }
+ * Endpoint GET: Digunakan oleh Service Worker untuk polling atau pendaftaran
  */
-function doPost(e) {
+function doGet(e) {
+  const action = e.parameter.action;
+
   try {
-    const data = JSON.parse(e.postData.contents);
-    
-    // Pastikan data yang dibutuhkan tersedia
-    if (data.course && data.deadline) {
-      const hasil = scheduleDeadlineNotification(data.course, data.description || "Ada tugas baru!", data.deadline);
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: hasil }))
+    if (action === 'get_latest') {
+      const latest = getLatestTask();
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        data: latest
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'subscribe') {
+      const status = e.parameter.status === 'true';
+      const info = e.parameter.info || 'Unknown Browser';
+      logSubscription(status, info);
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Data M.K atau Deadline kosong.' }))
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Action tidak dikenal' }))
       .setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.message }))
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 /**
- * Fungsi Inti untuk Menjadwalkan Notifikasi (Mendukung pemicu dari dalam Spreadsheet/Bot)
- * 
- * @param {string} course - Nama Mata Kuliah
- * @param {string} taskDetail - Detail Text/Deskripsi Tugas
- * @param {string} deadlineStr - String Deadline waktu: "2024-11-20 14:00" (Y-M-D H:M)
+ * Webhook Entry (POST): Tetap dipertahankan jika ada bot lain yang memicu notifikasi
+ */
+function doPost(e) {
+  return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'DIY Notifikasi tidak memerlukan POST lagi' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Fungsi baru untuk mengambil tugas terbaru dari Sheet
+ */
+function getLatestTask() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_ASSIGNMENTS);
+  if (!sheet) return null;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+
+  // Header: [Date, Course, Lecturer, Description, Deadline, Note, Format, Link]
+  const data = sheet.getRange(lastRow, 1, 1, 8).getValues()[0];
+  
+  return {
+    id: lastRow, // Gunakan nomor baris sebagai ID sederhana
+    date: data[0],
+    course: data[1],
+    lecturer: data[2],
+    description: data[3],
+    deadline: data[4],
+    note: data[5],
+    link: data[7]
+  };
+}
+
+/**
+ * Mencatat log subscriber ke tab baru
+ */
+function logSubscription(status, info) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_SUBSCRIBERS);
+  
+  // Buat sheet jika belum ada
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_SUBSCRIBERS);
+    sheet.appendRow(['Timestamp', 'Status', 'User Agent / Info']);
+  }
+
+  sheet.appendRow([new Date(), status ? 'ON' : 'OFF', info]);
+}
+
+/**
+ * Fungsi Inti (Legacy Cleanup): Sekarang tidak lagi menembak OneSignal
  */
 function scheduleDeadlineNotification(course, taskDetail, deadlineStr) {
-  const dlDate = new Date(deadlineStr);
-  
-  // Validasi parsing
-  if (isNaN(dlDate.getTime())) {
-    throw new Error("Format tanggal deadline tidak sah: " + deadlineStr);
-  }
-
-  const dlHour = dlDate.getHours();
-  
-  // Secara Default, atur waktu pengingat menjadi Jam 7 Pagi di Hari Deadline tersebut.
-  let reminderDate = new Date(dlDate.getTime());
-  reminderDate.setHours(7, 0, 0, 0);
-
-  // LOGIKA PENGINGAT SESUAI Aturan:
-  // - KETIKA DL >= 13:00 s.d 23:59 ---> Ingatkan jam 7 Pagi pada HARI H (Tidak diubah)
-  // - KETIKA DL <= 12:59 (00:00 s.d 12:59) ---> Ingatkan jam 7 Pagi pada HARI SEBELUMNYA (H-1)
-  if (dlHour < 13) {
-    reminderDate.setDate(reminderDate.getDate() - 1);
-  }
-  
-  const now = new Date();
-  let sendAfterStr = "";
-  
-  // Jika waktu pengingat (Jam 7 pagi) MASIH DI MASA DEPAN, Format untuk dijadwalkan OneSignal
-  if (reminderDate > now) {
-      // Format send_after wajib sesuai dokumentasi OneSignal: "YYYY-MM-DD HH:MM:00 GMT-0700"
-      // Kita paksakan konversi output ke zona waktu server/WIB (Asia/Jakarta) => "+0700"
-      sendAfterStr = Utilities.formatDate(reminderDate, "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss Z").replace("+0700", "GMT+0700");
-  } 
-  // Info: Jika reminderDate justru < now (Misal tugas dadakan yang diupload jam 9 pagi untuk jam 12 siang ini),
-  // sendAfterStr dibiarkan KOSONG, yang artinya notifikasi akan langsung DITEMBAK SEKARANG JUGA.
-
-  // Merakit Beban Pesan (Payload) API OneSignal
-  const payload = {
-    app_id: ONESIGNAL_APP_ID,
-    included_segments: ["Subscribed Users"], // Anda bisa mengatur label segmen "Semua Orang" 
-    headings: {
-      "en": "Pengingat Tugas: " + course
-    },
-    contents: {
-      "en": "Ada tugas pending: " + taskDetail + "\nDeadline: " + Utilities.formatDate(dlDate, "Asia/Jakarta", "dd MMM yyyy HH:mm") + " WIB"
-    }
-  };
-
-  // Tambahkan Penjadwalan jika ada
-  if (sendAfterStr) {
-    payload.send_after = sendAfterStr;
-  }
-
-  // Permintaan HTTP ke OneSignal REST API
-  const options = {
-    method: "post",
-    contentType: "application/json",
-    headers: {
-      "Authorization": "key " + ONESIGNAL_REST_API_KEY
-    },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
-
-  const response = UrlFetchApp.fetch("https://api.onesignal.com/notifications", options);
-  const responseCode = response.getResponseCode();
-  const responseText = response.getContentText();
-  Logger.log("Notifikasi Response (" + responseCode + "): " + responseText);
-  
-  if (responseCode !== 200 && responseCode !== 201) {
-    throw new Error("OneSignal Error (" + responseCode + "): " + responseText);
-  }
-  
-  return "Scheduled for " + (sendAfterStr || "Immediately (Langsung Keluar)");
+  Logger.log("Sistem DIY: Melewati OneSignal. Notifikasi akan diambil via Polling oleh Browser.");
+  return "Sistem beralih ke DIY Polling.";
 }
 
 /**

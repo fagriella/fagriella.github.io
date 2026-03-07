@@ -53,24 +53,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Icon Library (Phosphor Icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        // Only initialize OneSignal on HTTPS
-        if (location.protocol === 'https:') {
-            OneSignalDeferred.push(async function (OneSignal) {
-                await OneSignal.init({
-                    appId: "7b989f90-3334-4827-a3cd-b9738e971ab3",
-                    notifyButton: {
-                        enable: true,
-                    },
-                });
-            });
-        } else {
-            console.warn("OneSignal (Push Notifications) requires HTTPS. SDK initialization skipped for HTTP.");
-        }
-    </script>
+    <!-- DIY Notification initialization will be handled by script.js -->
     <link rel="stylesheet" href="style.css">
     <script>
         // Mencegah "flash" dengan menerapkan preferensi dari localStorage sebelum render

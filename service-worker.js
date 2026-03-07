@@ -69,3 +69,48 @@ self.addEventListener('fetch', function (event) {
         );
     }
 });
+
+// ===== NOTIFICATION CLICK: Buka web saat notifikasi diklik =====
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+
+    // Buka website (atau fokus jika sudah terbuka)
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(function (clientList) {
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if (client.url === '/' && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
+});
+
+// ===== PUSH: Handler untuk di masa depan jika ingin pakai Web Push asli (VAPID) =====
+self.addEventListener('push', function (event) {
+    var data = { title: 'Update Baru', body: 'Ada materi/tugas baru di Arsip Kuliah.' };
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data.body = event.data.text();
+        }
+    }
+
+    const options = {
+        body: data.body,
+        icon: '/images/logo/F.AGRIELLA.webp',
+        badge: '/images/logo/F.AGRIELLA.webp',
+        vibrate: [200, 100, 200],
+        tag: 'task-update',
+        data: data
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
+});
