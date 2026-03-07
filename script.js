@@ -381,7 +381,8 @@ async function initData() {
     if (window.location.hash) {
         const hash = window.location.hash.substring(1); // Remove '#'
         if (hash.startsWith('semester')) {
-            savedSemester = hash.replace('semester', '');
+            // Ambil bagian pertama sebelum '/' jika ada (contoh: semester2/Bahasa Inggris)
+            savedSemester = hash.split('/')[0].replace('semester', '');
         }
     }
     if (!savedSemester) {
@@ -1203,6 +1204,21 @@ function checkHashRoute() {
         // Kembalikan lebar grid layout
         const mainLayout = document.querySelector('.main-layout');
         if (mainLayout) mainLayout.style.gridTemplateColumns = '';
+
+        // --- DEEP LINK COURSE MODAL ---
+        // Jika ada bagian kedua setelah '/', itu adalah nama Matkul (contoh: #semester2/Bahasa%20Inggris)
+        const parts = hash.split('/');
+        if (parts.length > 1) {
+            const courseName = decodeURIComponent(parts[1]);
+            // Cari matkul di data yang sudah diload
+            const course = coursesData.find(c => c.name === courseName);
+            if (course) {
+                // Gunakan timeout sedikit agar UI beranda sempat render sebentar
+                setTimeout(() => {
+                    openCourseModal(course);
+                }, 100);
+            }
+        }
     }
     else if (hash === 'upload') {
         const uploadBtn = document.getElementById('menu-upload');
