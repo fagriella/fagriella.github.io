@@ -3089,14 +3089,59 @@ function logSubscriptionToGAS(status, subscription = null) {
     fetch(url, { mode: 'no-cors' }).catch(() => { });
 }
 
-/** Melakukan registrasi sederhana ntfy.sh */
+/** Melakukan registrasi sederhana ntfy.sh via Modal Popup */
 async function subscribeToPush() {
-    // Dengan ntfy.sh, kita cukup arahkan user ke URL topiknya saja
-    window.open(NTFY_URL, '_blank');
-    return "ntfy_subscribed";
+    const modal = document.getElementById('ntfy-modal');
+    const backdrop = document.getElementById('ntfy-backdrop');
+    const iframe = document.getElementById('ntfy-iframe');
+
+    if (modal && backdrop && iframe) {
+        // Gunakan parameter ?simple=1 untuk tampilan ntfy yang lebih bersih
+        iframe.src = `${NTFY_URL}?simple=1`;
+
+        backdrop.style.display = 'block';
+        modal.style.display = 'block';
+
+        // Animasi muncul
+        setTimeout(() => {
+            backdrop.style.opacity = '1';
+            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+            modal.style.opacity = '1';
+        }, 10);
+    }
+
+    return "ntfy_modal_opened";
 }
 
-// (urlBase64ToUint8Array dihapus karena tidak lagi butuh VAPID)
+// Logic untuk menutup Modal ntfy
+function closeNtfyModal() {
+    const modal = document.getElementById('ntfy-modal');
+    const backdrop = document.getElementById('ntfy-backdrop');
+    const iframe = document.getElementById('ntfy-iframe');
+
+    if (modal && backdrop) {
+        backdrop.style.opacity = '0';
+        modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+        modal.style.opacity = '0';
+
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+            modal.style.display = 'none';
+            iframe.src = ""; // Bersihkan iframe untuk menghemat RAM
+        }, 300);
+    }
+}
+
+// Daftarkan event listener untuk tombol close ntfy
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('ntfy-modal-close');
+    const backdrop = document.getElementById('ntfy-backdrop');
+
+    if (closeBtn) closeBtn.onclick = closeNtfyModal;
+    if (backdrop) backdrop.onclick = closeNtfyModal;
+});
+
+// --- EXISTING CODES ---
 
 /** Menampilkan notifikasi lokal di browser */
 function showLocalNotification(title, body) {
