@@ -980,22 +980,40 @@ function setupEventListeners() {
     });
 
     // Close Modal
-    document.querySelector('.close-modal').addEventListener('click', () => {
-        document.getElementById('material-modal').classList.remove('active');
+    document.getElementById('close-material-modal').addEventListener('click', () => {
+        const modal = document.getElementById('material-modal');
+        modal.classList.remove('active');
+
+        // Kembalikan hash ke semester saja saat modal ditutup
+        if (activeCourse) {
+            window.location.hash = 'semester' + activeCourse.semester;
+        } else {
+            window.history.pushState('', document.title, window.location.pathname);
+        }
     });
 
     document.getElementById('close-assign-modal').addEventListener('click', () => {
         document.getElementById('assignment-modal').classList.remove('active');
     });
 
-    // Close Preview Modal
-    const closePreviewBtn = document.getElementById('close-preview-modal');
-    if (closePreviewBtn) {
-        closePreviewBtn.addEventListener('click', () => {
-            document.getElementById('preview-modal').classList.remove('active');
-            document.getElementById('preview-frame').src = ''; // Stop loading
+    // Close Modal by clicking overlay
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+
+                // Jika modal yang ditutup adalah modal materi, revert hash
+                if (modal.id === 'material-modal' && activeCourse) {
+                    window.location.hash = 'semester' + activeCourse.semester;
+                }
+
+                // Special handling for preview
+                if (modal.id === 'preview-modal') {
+                    document.getElementById('preview-frame').src = 'about:blank';
+                }
+            }
         });
-    }
+    });
 
     // Fullscreen Toggle Logic
     const fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -1059,6 +1077,12 @@ function setupEventListeners() {
             const activeModal = document.querySelector('.modal.active');
             if (activeModal) {
                 activeModal.classList.remove('active');
+
+                // Revert hash jika modal materi ditutup lewat ESC
+                if (activeModal.id === 'material-modal' && activeCourse) {
+                    window.location.hash = 'semester' + activeCourse.semester;
+                }
+
                 // Special handling for preview modal to stop video/content loading
                 if (activeModal.id === 'preview-modal') {
                     document.getElementById('preview-frame').src = 'about:blank'; // Stop loading
