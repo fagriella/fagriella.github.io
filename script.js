@@ -336,6 +336,29 @@ function initUserSync() {
     });
 }
 
+/** 
+ * Sinkronkan data ke cloud secara otomatis (setiap interaksi) 
+ * Hanya jalan jika sync_token sudah diisi di pengaturan.
+ */
+async function pushUserSyncData() {
+    const token = localStorage.getItem('sync_token');
+    if (!token || !SYNC_SCRIPT_URL || SYNC_SCRIPT_URL.includes('MASUKKAN')) return;
+
+    const data = {
+        theme: localStorage.getItem('theme') || 'light',
+        semester: localStorage.getItem('semester') || '1',
+        bookmarks: JSON.parse(localStorage.getItem('bookmarks')) || []
+    };
+
+    const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=user_sync&method=set&token=${encodeURIComponent(token)}&data=${encodeURIComponent(JSON.stringify(data))}`;
+
+    try {
+        await fetch(url);
+    } catch (e) {
+        console.warn("Auto-sync cloud failed:", e);
+    }
+}
+
 
 // 1. Theme Handling
 function initTheme() {
@@ -365,6 +388,9 @@ function initTheme() {
                 localStorage.setItem('theme', 'dark');
                 icon.classList.replace('ph-moon', 'ph-sun');
             }
+
+            // Sync Otomatis ke Cloud jika token ada
+            pushUserSyncData();
 
             // Kirim setelan tema baru ke iframe (GAS.html) agar selaras
             const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -1059,6 +1085,9 @@ function setupEventListeners() {
 
         // Update URL Hash
         window.location.hash = 'semester' + selectedSemester;
+
+        // Sync Otomatis ke Cloud jika token ada
+        pushUserSyncData();
     });
 
     // Search Toggle Mobile
@@ -2213,6 +2242,9 @@ function toggleBookmark(id, type, title, subtitle, link, fileType, event) {
     }
 
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+
+    // Sync Otomatis ke Cloud jika token ada
+    pushUserSyncData();
 
     // Update ikon yang diklik secara langsung untuk feedback instan, JIKA event ada
     if (event) {
