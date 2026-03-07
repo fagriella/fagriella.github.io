@@ -267,15 +267,11 @@ function initTheme() {
 
             if (isDark) {
                 document.documentElement.removeAttribute('data-theme');
-                if (localStorage.getItem('consent_personalization') === 'true') {
-                    localStorage.setItem('theme', 'light');
-                }
+                localStorage.setItem('theme', 'light');
                 icon.classList.replace('ph-sun', 'ph-moon');
             } else {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                if (localStorage.getItem('consent_personalization') === 'true') {
-                    localStorage.setItem('theme', 'dark');
-                }
+                localStorage.setItem('theme', 'dark');
                 icon.classList.replace('ph-moon', 'ph-sun');
             }
 
@@ -398,7 +394,8 @@ window.addEventListener('message', (event) => {
 async function initData() {
     // Jalankan Sinkronisasi Materi di Latar Belakang (Non-blocking)
     if (SYNC_SCRIPT_URL && SYNC_SCRIPT_URL !== 'MASUKKAN_URL_WEB_APP_DISINI') {
-        fetch(SYNC_SCRIPT_URL)
+        const syncUrl = SYNC_SCRIPT_URL + (SYNC_SCRIPT_URL.includes('?') ? '&' : '?') + 'action=sync';
+        fetch(syncUrl)
             .then(res => res.json())
             .then(data => console.log("Auto-Sync Response:", data))
             .catch(err => console.error("Auto-Sync Error:", err));
@@ -417,11 +414,8 @@ async function initData() {
         }
     }
     if (!savedSemester) {
-        if (localStorage.getItem('consent_personalization') === 'true') {
-            savedSemester = localStorage.getItem('semester') || '1';
-        } else {
-            savedSemester = '1';
-        }
+        // Personalisasi sekarang selalu aktif
+        savedSemester = localStorage.getItem('semester') || '1';
     }
 
     const semesterSelect = document.getElementById('semester-filter');
@@ -966,9 +960,7 @@ function setupEventListeners() {
     // Filter Semester
     document.getElementById('semester-filter').addEventListener('change', (e) => {
         const selectedSemester = e.target.value;
-        if (localStorage.getItem('consent_personalization') === 'true') {
-            localStorage.setItem('semester', selectedSemester);
-        }
+        localStorage.setItem('semester', selectedSemester);
         loadCourses(selectedSemester);
         loadDashboard(selectedSemester);
         loadAssignments(selectedSemester);
@@ -2129,9 +2121,7 @@ function toggleBookmark(id, type, title, subtitle, link, fileType, event) {
         isNowBookmarked = true;
     }
 
-    if (localStorage.getItem('consent_personalization') === 'true') {
-        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-    }
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
 
     // Update ikon yang diklik secara langsung untuk feedback instan, JIKA event ada
     if (event) {
@@ -3131,14 +3121,22 @@ function showLocalNotification(title, body) {
     }
 }
 
-/** Loop pengecekan tugas baru (saat tab dibuka) */
+/** Loop pengecekan tugas baru dan sinkronisasi otomatis (saat tab dibuka) */
 function checkNewTasksLoop() {
-    if (localStorage.getItem('consent_notifications') !== 'true') return;
+    if (localStorage.getItem('consent_notifications') !== 'true') {
+        setTimeout(checkNewTasksLoop, 5 * 60 * 1000);
+        return;
+    }
     if (!SYNC_SCRIPT_URL || SYNC_SCRIPT_URL.includes('PASTE')) return;
 
-    const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=get_latest`;
+    // Tambahkan perintah sync di loop
+    const syncUrl = SYNC_SCRIPT_URL + (SYNC_SCRIPT_URL.includes('?') ? '&' : '?') + 'action=sync';
 
-    fetch(url)
+    fetch(syncUrl)
+        .then(() => {
+            const url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=get_latest`;
+            return fetch(url);
+        })
         .then(response => response.json())
         .then(res => {
             if (res.status === 'success' && res.data) {
@@ -3147,15 +3145,15 @@ function checkNewTasksLoop() {
 
                 if (lastSeenId && parseInt(lastSeenId) < latestTask.id) {
                     showLocalNotification("Tugas Baru Terdeteksi!", `${latestTask.course}: ${latestTask.description}`);
+                    if (typeof initData === 'function') initData();
                 }
                 localStorage.setItem('last_seen_task_id', latestTask.id);
             }
         })
         .catch(() => { });
 
-    // Cek setiap 5 menit saat tab aktif
-    setTimeout(checkNewTasksLoop, 5 * 60 * 1000);
+    setTimeout(checkNewTasksLoop, 1 * 60 * 1000); // 1 menit sekali
 }
 
 // Jalankan loop saat awal
-setTimeout(checkNewTasksLoop, 5000);
+setTimeout(checkNewTasksLoop, 10000);
