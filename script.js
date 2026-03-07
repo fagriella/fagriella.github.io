@@ -5,16 +5,7 @@
  * Data diambil dalam format CSV melalui URL publik Google Sheets.
  */
 
-// --- KONFIGURASI GOOGLE SHEETS ---
-// Ganti URL di bawah ini dengan Link CSV dari Google Sheet Anda (File > Share > Publish to Web > CSV)
-const COURSES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=188724190&single=true&output=csv';
-const MATERIALS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1308771559&single=true&output=csv';
-const ASSIGNMENTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1992582246&single=true&output=csv';
-const ARSIP_FOTO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=474587746&single=true&output=csv'; // Ganti gid arsip foto nantinya
-const MAHASISWA_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1814680259&single=true&output=csv'; // GANTI GID INI DENGAN TAB MAHASISWA
-const INFO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEAg3iZc-gW93aYLpM8qqdDXtIL4vg4wdWykWo62bdRFuUzRWEMbmxnzOQXqVKCjPhUTyMCyrSRDDy/pub?gid=1266085536&single=true&output=csv';
-const SYNC_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxosyzTfCd_GfHGLkFGrGhCljhr_87dHQ3Ntv9VkMnM1yh4YTBwS4pOQVUn6PTLeO8Qtw/exec'; // URL dari autosinkronmateri.gs
-const VAPID_PUBLIC_KEY = 'BKF4yAYG3ppTj1CEMns_VS20AekWkpZds9Tqjgs3oM5DOSTH0waPtEZUs9Y8sDI_nx-aidZdJQNq6dRkJISUUiE';
+// (Konfigurasi Google Sheets, Web App URL, dan ntfy.sh dipindahkan ke config.js)
 
 // --- LISTENER REFRESH DARI IFRAME GAS.html ---
 // GAS.html mengirim { type: 'refresh' } setelah upload/hapus berhasil.
@@ -150,11 +141,16 @@ function initCookieConsent() {
         localStorage.setItem('consent_personalization', 'true');
         localStorage.setItem('consent_notifications', 'true');
 
-        // Minta ijin notifikasi & Push Native
-        subscribeToPush().then(sub => {
-            logSubscriptionToGAS(true, sub);
-            if (sub) showLocalNotification("Sistem Diaktifkan", "Terima kasih telah berlangganan!");
-        });
+        // Minta ijin notifikasi & Tawarkan ntfy.sh
+        if ("Notification" in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showLocalNotification("Sistem Diaktifkan", "Terima kasih! Kami menyarankan Anda juga subscribe di ntfy.sh agar notifikasi tetap masuk saat web ditutup.");
+                    window.open(NTFY_URL, '_blank');
+                }
+            });
+        }
+        logSubscriptionToGAS(true);
 
         hideBanner();
     };
@@ -179,11 +175,16 @@ function initCookieConsent() {
                 localStorage.setItem('consent_notifications', isEnabled);
 
                 if (isEnabled) {
-                    // Minta ijin browser & Langganan Push Native jika belum
-                    subscribeToPush().then(sub => {
-                        logSubscriptionToGAS(true, sub);
-                        if (sub) showLocalNotification("Sistem Diaktifkan", "Anda akan menerima notifikasi meskipun web ditutup.");
-                    });
+                    // Tawarkan ntfy.sh di tab baru
+                    if ("Notification" in window) {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                showLocalNotification("Siap!", "Membuka halaman aktivasi notifikasi background (ntfy.sh)...");
+                                window.open(NTFY_URL, '_blank');
+                            }
+                        });
+                    }
+                    logSubscriptionToGAS(true);
                 } else {
                     logSubscriptionToGAS(false);
                 }
@@ -1310,7 +1311,7 @@ function checkHashRoute() {
         const iframe = document.getElementById('upload-modal-iframe');
         if (iframe && iframe.src === 'about:blank' || iframe.src === window.location.href) {
             const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-            iframe.src = 'https://script.google.com/macros/s/AKfycbzhZkLgXDqLVi80_NY7cbIx8UwZVBONgvwBnJIik4EqHfThHq2iU0EuPGzlBxa-OQpd/exec?theme=' + currentTheme;
+            iframe.src = UPLOAD_IFRAME_URL + '?theme=' + currentTheme;
         }
     }
     // 3. Rute Pengaturan
@@ -3083,54 +3084,19 @@ function logSubscriptionToGAS(status, subscription = null) {
 
     let url = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=subscribe&status=${status}&info=${encodeURIComponent(navigator.userAgent)}`;
 
-    // Tambahkan data push subscription jika ada (JSON string)
-    if (subscription) {
-        url += `&subscription=${encodeURIComponent(JSON.stringify(subscription))}`;
-    }
+    // (Subscription object tidak lagi dikirim karena menggunakan ntfy.sh)
 
     fetch(url, { mode: 'no-cors' }).catch(() => { });
 }
 
-/** Melakukan registrasi Web Push Native (VAPID) agar notifikasi masuk saat browser tutup */
+/** Melakukan registrasi sederhana ntfy.sh */
 async function subscribeToPush() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-
-    try {
-        const registration = await navigator.serviceWorker.ready;
-
-        // Cek jika sudah ada subscription
-        let subscription = await registration.pushManager.getSubscription();
-
-        if (!subscription) {
-            // Subscribe baru dengan VAPID key
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
-        }
-
-        return subscription;
-    } catch (err) {
-        console.error("Gagal subscribe Web Push:", err);
-        // Fallback jika Push gagal, minimal minta ijin Notification standard
-        if (Notification.permission === 'default') {
-            await Notification.requestPermission();
-        }
-        return null;
-    }
+    // Dengan ntfy.sh, kita cukup arahkan user ke URL topiknya saja
+    window.open(NTFY_URL, '_blank');
+    return "ntfy_subscribed";
 }
 
-/** Helper: Mengonversi VAPID key String ke Uint8Array */
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
+// (urlBase64ToUint8Array dihapus karena tidak lagi butuh VAPID)
 
 /** Menampilkan notifikasi lokal di browser */
 function showLocalNotification(title, body) {
