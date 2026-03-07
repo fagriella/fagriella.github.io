@@ -194,18 +194,45 @@ function initCookieConsent() {
             testNotifBtn.disabled = true;
             testNotifBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Mengirim...';
 
-            google.script.run
-                .withSuccessHandler(() => {
-                    alert('Test Notifikasi berhasil dipicu lewat notifikasi.gs! Periksa perangkat Anda.');
-                    testNotifBtn.disabled = false;
-                    testNotifBtn.innerHTML = originalHTML;
-                })
-                .withFailureHandler((err) => {
-                    alert('Gagal mengirim test via GAS: ' + err);
-                    testNotifBtn.disabled = false;
-                    testNotifBtn.innerHTML = originalHTML;
-                })
-                .testNotification(); // Fungsi di notifikasi.gs
+            // Metode 1: Gunakan Fetch ke SYNC_SCRIPT_URL (Universal: GitHub & GAS)
+            if (SYNC_SCRIPT_URL && SYNC_SCRIPT_URL !== 'MASUKKAN_URL_WEB_APP_DISINI') {
+                const testUrl = SYNC_SCRIPT_URL + (SYNC_SCRIPT_URL.includes('?') ? '&' : '?') + 'action=test';
+
+                fetch(testUrl, { mode: 'no-cors' })
+                    .then(() => {
+                        alert('Permintaan Test Notifikasi terkirim! Silakan periksa perangkat Anda.');
+                        testNotifBtn.disabled = false;
+                        testNotifBtn.innerHTML = originalHTML;
+                    })
+                    .catch(err => {
+                        console.error("Fetch error:", err);
+                        alert('Gagal memicu test lewat Web App. Pastikan SYNC_SCRIPT_URL sudah benar.');
+                        testNotifBtn.disabled = false;
+                        testNotifBtn.innerHTML = originalHTML;
+                    });
+                return;
+            }
+
+            // Metode 2: Fallback ke google.script.run (Hanya jika di URL script.google.com)
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(() => {
+                        alert('Test Notifikasi berhasil dipicu via GAS! Periksa perangkat Anda.');
+                        testNotifBtn.disabled = false;
+                        testNotifBtn.innerHTML = originalHTML;
+                    })
+                    .withFailureHandler((err) => {
+                        alert('Gagal mengirim test: ' + err);
+                        testNotifBtn.disabled = false;
+                        testNotifBtn.innerHTML = originalHTML;
+                    })
+                    .testNotification();
+                return;
+            }
+
+            alert('Konfigurasi Web App (SYNC_SCRIPT_URL) belum diatur.');
+            testNotifBtn.disabled = false;
+            testNotifBtn.innerHTML = originalHTML;
         });
     }
 
