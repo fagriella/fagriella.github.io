@@ -103,8 +103,8 @@ function initCookieConsent() {
     const manageBtn = document.getElementById('manage-cookies-btn');
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
-    const personalizationToggle = document.getElementById('consent-personalization-toggle');
-    const notificationToggle = document.getElementById('consent-notification-toggle');
+    const personalizeToggle = document.getElementById('consent-personalization-toggle');
+    // Notifikasi native toggle sudah digantikan oleh Webpushr button
 
     if (!banner) return;
 
@@ -120,16 +120,6 @@ function initCookieConsent() {
     const openSettingsModal = () => {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
-
-        // Cek status notif dari Browser Native (Universal)
-        if (notificationToggle) {
-            if (Notification.permission === 'granted') {
-                notificationToggle.checked = localStorage.getItem('consent_notifications') === 'true';
-            } else {
-                notificationToggle.checked = false;
-                localStorage.setItem('consent_notifications', 'false');
-            }
-        }
 
         settingsModal.classList.add('active');
     };
@@ -169,26 +159,7 @@ function initCookieConsent() {
             hideBanner();
             closeSettingsModal();
 
-            // Simpan status notifikasi secara Lokal & ke GAS (DIY)
-            if (notificationToggle && !notificationToggle.disabled) {
-                const isEnabled = notificationToggle.checked;
-                localStorage.setItem('consent_notifications', isEnabled);
-
-                if (isEnabled) {
-                    // Tawarkan ntfy.sh di tab baru
-                    if ("Notification" in window) {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === 'granted') {
-                                showLocalNotification("Siap!", "Membuka halaman aktivasi notifikasi background (ntfy.sh)...");
-                                window.open(NTFY_URL, '_blank');
-                            }
-                        });
-                    }
-                    logSubscriptionToGAS(true);
-                } else {
-                    logSubscriptionToGAS(false);
-                }
-            }
+            // Status notifikasi kini ditangani sepenuhnya oleh widget Webpushr.
 
             // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
             if (!personalizationToggle.checked) {
