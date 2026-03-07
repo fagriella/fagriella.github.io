@@ -106,8 +106,7 @@ function initCookieConsent() {
     const hideBanner = () => banner.classList.remove('show');
 
     const openSettingsModal = () => {
-        // Set toggle state based on current preference
-        personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
+        // Personalisasi sekarang selalu aktif (Selalu Aktif di UI)
 
         // Cerminkan persetujuan notifikasi (Prioritaskan state localStorage yang disimpan user)
         if (notificationToggle) {
@@ -145,7 +144,7 @@ function initCookieConsent() {
 
     const savePreferences = () => {
         localStorage.setItem('cookieConsent', 'true');
-        localStorage.setItem('consent_personalization', personalizationToggle.checked);
+        localStorage.setItem('consent_personalization', 'true');
         localStorage.setItem('consent_notifications', notificationToggle ? notificationToggle.checked : false);
 
         const finalizeClose = () => {
@@ -154,16 +153,9 @@ function initCookieConsent() {
 
             // Status notifikasi kini ditangani sepenuhnya oleh widget Webpushr.
 
-            // Jika pengguna menonaktifkan personalisasi, hapus data yang ada
-            if (!personalizationToggle.checked) {
-                localStorage.removeItem('theme');
-                localStorage.removeItem('bookmarks');
-                window.history.replaceState("", document.title, window.location.pathname + window.location.search);
-                window.location.reload();
-            } else {
-                if (window.location.hash === '#pengaturan') {
-                    window.history.pushState("", document.title, window.location.pathname + window.location.search);
-                }
+            // Personalisasi sekarang selalu diproses tanpa perlu pengecekan toggle lagi
+            if (window.location.hash === '#pengaturan') {
+                window.history.pushState("", document.title, window.location.pathname + window.location.search);
             }
         };
 
