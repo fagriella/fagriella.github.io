@@ -3089,69 +3089,25 @@ function logSubscriptionToGAS(status, subscription = null) {
     fetch(url, { mode: 'no-cors' }).catch(() => { });
 }
 
-/** Menyiapkan data Base64 untuk VAPID */
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
-    return outputArray;
-}
-
-/** Melakukan registrasi NATIVE Web Push ke ntfy.sh */
+/** 
+ * Registrasi notifikasi sekarang dikelola otomatis oleh Webpushr SDK.
+ * Fungsi ini hanya memicu prompt Webpushr secara manual jika dipanggil dari toggle pengaturan.
+ */
 async function subscribeToPush() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.error('Push NOT supported');
-        return "not_supported";
-    }
-
-    try {
-        // 1. Minta Izin (Native Prompt)
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return "permission_denied";
-
-        // 2. Registrasi / Ambil SW
-        const registration = await navigator.serviceWorker.ready;
-
-        // 3. Subscribe ke browser push service (Google/Mozilla) via VAPID ntfy
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(NTFY_VAPID_PUBLIC_KEY)
-        });
-
-        // 4. Kirim data subscription ke gateway ntfy.sh
-        const subJson = subscription.toJSON();
-        const payload = {
-            endpoint: subJson.endpoint,
-            p256dh: subJson.keys.p256dh,
-            auth: subJson.keys.auth,
-            topics: [NTFY_TOPIC]
-        };
-
-        const response = await fetch(NTFY_GATEWAY_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-        });
-
-        if (response.ok) {
-            console.log('Native ntfy subscription success!');
-            return "subscribed_native";
-        } else {
-            console.error('Failed to register with ntfy gateway');
-            return "gateway_error";
-        }
-    } catch (error) {
-        console.error('Native Push Error:', error);
+    if (typeof webpushr !== 'undefined') {
+        console.log("Memicu Webpushr prompt...");
+        // Memanggil prompt opt-in bawaan Webpushr
+        webpushr('button_click');
+        return "webpushr_prompt_triggered";
+    } else {
+        console.warn("Webpushr SDK belum termuat atau diblokir oleh AdBlocker.");
         return "error";
     }
 }
 
-// (Fungsi closeNtfyModal dihapus karena tidak lagi butuh modal)
-
 // Daftarkan event listener (hanya yang diperlukan)
 document.addEventListener('DOMContentLoaded', () => {
-    // Tidak ada lagi modal yang perlu dikontrol
+    // Tidak ada lagi modal manual yang perlu dikontrol
 });
 
 // --- EXISTING CODES ---
