@@ -122,12 +122,21 @@ function initCookieConsent() {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
 
-        // Cerminkan persetujuan notifikasi dengan status OS/Browser native
+        // Cerminkan persetujuan notifikasi (Prioritaskan state localStorage yang disimpan user)
         if (notificationToggle) {
-            notificationToggle.checked = (Notification.permission === 'granted');
+            const savedState = localStorage.getItem('consent_notifications');
+            if (Notification.permission === 'denied') {
+                notificationToggle.checked = false;
+                localStorage.setItem('consent_notifications', 'false');
+            } else if (savedState === 'true') {
+                notificationToggle.checked = true;
+            } else if (savedState === 'false') {
+                notificationToggle.checked = false;
+            } else {
+                // Default: ON jika permission granted, OFF jika belum
+                notificationToggle.checked = (Notification.permission === 'granted');
+            }
         }
-
-        settingsModal.classList.add('active');
     };
 
     const closeSettingsModal = () => settingsModal.classList.remove('active');
@@ -225,9 +234,7 @@ function initCookieConsent() {
 
                 fetch(testUrl, { mode: 'no-cors' })
                     .then(() => {
-                        // Tampilkan notifikasi lokal sebagai bukti browser bisa me-render
-                        showLocalNotification("Test Notifikasi", "Permintaan test terkirim ke server!");
-                        alert('Permintaan Test Notifikasi terkirim! Periksa notifikasi browser Anda.');
+                        showLocalNotification("Test Berhasil", "Sinyal kirim dikirim ke Webpushr! Notifikasi akan muncul sebentar lagi.");
                         testNotifBtn.disabled = false;
                         testNotifBtn.innerHTML = originalHTML;
                     })
