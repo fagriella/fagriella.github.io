@@ -103,7 +103,7 @@ function initCookieConsent() {
     const manageBtn = document.getElementById('manage-cookies-btn');
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
-    const personalizeToggle = document.getElementById('consent-personalization-toggle');
+    const personalizationToggle = document.getElementById('consent-personalization-toggle');
     const notificationToggle = document.getElementById('consent-notification-toggle');
     // Notifikasi native toggle sudah digantikan oleh Webpushr button
 
@@ -141,19 +141,17 @@ function initCookieConsent() {
 
     const closeSettingsModal = () => settingsModal.classList.remove('active');
 
+    // Ekspos agar bisa dipanggil dari rute hash atau menu utama
+    window.openSettingsModal = openSettingsModal;
+
     const acceptAll = () => {
         localStorage.setItem('cookieConsent', 'true');
         localStorage.setItem('consent_personalization', 'true');
         localStorage.setItem('consent_notifications', 'true');
 
-        // Minta ijin notifikasi & Tawarkan ntfy.sh
+        // Minta ijin notifikasi (Handled by Webpushr widget, tapi tetap minta ijin untuk sistem lokal)
         if ("Notification" in window) {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    showLocalNotification("Sistem Diaktifkan", "Terima kasih! Kami menyarankan Anda juga subscribe di ntfy.sh agar notifikasi tetap masuk saat web ditutup.");
-                    window.open(NTFY_URL, '_blank');
-                }
-            });
+            Notification.requestPermission();
         }
         logSubscriptionToGAS(true);
 
@@ -169,6 +167,7 @@ function initCookieConsent() {
     const savePreferences = () => {
         localStorage.setItem('cookieConsent', 'true');
         localStorage.setItem('consent_personalization', personalizationToggle.checked);
+        localStorage.setItem('consent_notifications', notificationToggle ? notificationToggle.checked : false);
 
         const finalizeClose = () => {
             hideBanner();
@@ -1326,7 +1325,10 @@ function checkHashRoute() {
         if (pengaturanBtn) pengaturanBtn.classList.add('active');
 
         const settingsModal = document.getElementById('cookie-settings-modal');
-        if (settingsModal) settingsModal.classList.add('active');
+        if (settingsModal) {
+            settingsModal.classList.add('active');
+            if (typeof window.openSettingsModal === 'function') window.openSettingsModal();
+        }
     }
     // 4. Rute Arsip Foto
     else if (hash.startsWith('arsipfoto')) {
