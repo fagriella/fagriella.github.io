@@ -463,47 +463,48 @@
                             style="background: var(--stone-grey); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 0.8rem; border-radius: 50px; cursor: pointer; font-size: 0.75rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 4px;">
                             <i class="ph ph-bell"></i> Kirim Test
                         </button>
-                        <!-- Webpushr Native Bell Toggle -->
-                        <span id="webpushr-subscription-toggle-button" data-size="1.1"
-                            data-text-when-denied="You've blocked push notifications."
-                            data-tooltip-position="bottom" data-color="#0b5c0a"></span>
                     </div>
-
-                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-                    <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Perubahan &
-                        Tutup</button>
+                    <!-- Webpushr Native Bell Toggle -->
+                    <span id="webpushr-subscription-toggle-button" data-size="1.1"
+                        data-text-when-denied="You've blocked push notifications." data-tooltip-position="bottom"
+                        data-color="#0b5c0a"></span>
                 </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Perubahan &
+                    Tutup</button>
             </div>
         </div>
+    </div>
 
-        <!-- Cookie Consent Banner -->
-        <div id="cookie-consent-banner" class="cookie-consent-banner">
-            <p>Situs ini menggunakan penyimpanan lokal untuk fungsionalitas seperti tema & bookmark. Dengan melanjutkan,
-                Anda setuju dengan penggunaan ini.</p>
-            <div class="cookie-consent-actions">
-                <button id="reject-cookie-btn" class="btn-secondary">Tolak</button>
-                <button id="manage-cookies-btn" class="btn-secondary">Kelola Pilihan</button>
-                <button id="accept-cookie-btn">Mengerti & Setuju</button>
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-consent-banner" class="cookie-consent-banner">
+        <p>Situs ini menggunakan penyimpanan lokal untuk fungsionalitas seperti tema & bookmark. Dengan melanjutkan,
+            Anda setuju dengan penggunaan ini.</p>
+        <div class="cookie-consent-actions">
+            <button id="reject-cookie-btn" class="btn-secondary">Tolak</button>
+            <button id="manage-cookies-btn" class="btn-secondary">Kelola Pilihan</button>
+            <button id="accept-cookie-btn">Mengerti & Setuju</button>
+        </div>
+    </div>
+
+    <!-- Modal Upload -->
+    <div id="upload-modal" class="modal fullscreen-modal">
+        <div class="modal-content fullscreen" style="background: var(--bg-color);">
+            <div class="modal-body" style="padding: 0; flex-grow: 1; position: relative; background: transparent;">
+                <iframe id="upload-modal-iframe" allowtransparency="true"
+                    style="width: 100%; height: 100%; border: none; background: transparent;"
+                    src="about:blank"></iframe>
             </div>
         </div>
-
-        <!-- Modal Upload -->
-        <div id="upload-modal" class="modal fullscreen-modal">
-            <div class="modal-content fullscreen" style="background: var(--bg-color);">
-                <div class="modal-body" style="padding: 0; flex-grow: 1; position: relative; background: transparent;">
-                    <iframe id="upload-modal-iframe" allowtransparency="true"
-                        style="width: 100%; height: 100%; border: none; background: transparent;"
-                        src="about:blank"></iframe>
-                </div>
-            </div>
-        </div>
+    </div>
 
 
 
 
-        <!-- Info / Pengumuman Panel (Slide Down from Header) -->
-        <div id="info-panel" style="
+    <!-- Info / Pengumuman Panel (Slide Down from Header) -->
+    <div id="info-panel" style="
         display: none;
         position: fixed;
         top: 62px;
@@ -520,33 +521,33 @@
         transition: transform 0.25s ease, opacity 0.25s ease;
         overflow: hidden;
     ">
+        <div
+            style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);">
             <div
-                style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);">
-                <div
-                    style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">
-                    <i class="ph ph-bell-ringing" style="color: var(--accent-color); font-size: 1.1rem;"></i>
-                    Info Terbaru
-                </div>
-                <button id="info-panel-close"
-                    style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--text-secondary);line-height:1;">&times;</button>
+                style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">
+                <i class="ph ph-bell-ringing" style="color: var(--accent-color); font-size: 1.1rem;"></i>
+                Info Terbaru
             </div>
-            <div id="info-panel-body"
-                style="padding: 0.75rem 1rem; max-height: 340px; overflow-y: auto; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
-                <!-- Diisi oleh script.js -->
-            </div>
+            <button id="info-panel-close"
+                style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--text-secondary);line-height:1;">&times;</button>
         </div>
+        <div id="info-panel-body"
+            style="padding: 0.75rem 1rem; max-height: 340px; overflow-y: auto; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            <!-- Diisi oleh script.js -->
+        </div>
+    </div>
 
-        <script>
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js');
-            }
-        </script>
-        <!-- start webpushr code -->
-        <script>(function (w, d, s, id) { if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js"; fjs.parentNode.appendChild(js); }(window, document, 'script', 'webpushr-jssdk')); webpushr('setup', { 'key': 'BIFo3s22AldoZXpV9bOY3-30VRxAlAvhwCa3tDSsEJjlPtjqEy_k71Y6j6MEJnb4mnQV1j29IBmiBkFB9QEqHR4' });</script>
-        <!-- end webpushr code -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js');
+        }
+    </script>
+    <!-- start webpushr code -->
+    <script>(function (w, d, s, id) { if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js"; fjs.parentNode.appendChild(js); }(window, document, 'script', 'webpushr-jssdk')); webpushr('setup', { 'key': 'BIFo3s22AldoZXpV9bOY3-30VRxAlAvhwCa3tDSsEJjlPtjqEy_k71Y6j6MEJnb4mnQV1j29IBmiBkFB9QEqHR4' });</script>
+    <!-- end webpushr code -->
 
-        <script src="config.js"></script>
-        <script src="script.js"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
