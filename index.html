@@ -476,6 +476,20 @@
                     </div>
                 </div>
 
+                <div class="cookie-pref-item" style="flex-direction: column; align-items: flex-start; gap: 1rem;">
+                    <div class="cookie-pref-info">
+                        <h4>Sinkronisasi Perangkat (Token)</h4>
+                        <p>Gunakan token (contoh: nama kota) untuk sinkronisasi tema & bookmark antar perangkat.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <input type="text" id="sync-token-input" placeholder="Masukkan token Anda..."
+                            style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                        <button id="btn-sync-now" class="btn-upload"
+                            style="width: auto; padding: 0 1.5rem; margin-top: 0;">Sinkron</button>
+                    </div>
+                    <p id="sync-status-msg" style="font-size: 0.8rem; margin: 0; display: none;"></p>
+                </div>
+
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
 
                 <button id="save-cookie-prefs-btn" class="btn-upload" style="margin-top: 2rem;">Simpan Perubahan &

@@ -79,6 +79,7 @@ if (bookmarks.length > 0 && typeof bookmarks[0] === 'string') {
 document.addEventListener('DOMContentLoaded', () => {
     initCookieConsent();
     initTheme();
+    initUserSync(); // Inisialisasi sinkronisasi token
     setupEventListeners();
     initData(); // Mulai fetch data
 });
@@ -240,9 +241,99 @@ function initCookieConsent() {
         });
     }
 
-    setTimeout(() => {
-        showBanner();
-    }, 1500);
+    setTimeout(showBanner, 1500);
+}
+
+/**
+ * LOGIC SINKRONISASI DATA PENGGUNA (TOKEN SYNC)
+ */
+function initUserSync() {
+    const tokenInput = document.getElementById('sync-token-input');
+    const syncBtn = document.getElementById('btn-sync-now');
+    const statusMsg = document.getElementById('sync-status-msg');
+
+    if (!syncBtn) return;
+
+    // Load token terakhir dari localStorage jika ada
+    const lastToken = localStorage.getItem('sync_token');
+    if (lastToken) tokenInput.value = lastToken;
+
+    syncBtn.addEventListener('click', async () => {
+        const token = tokenInput.value.trim();
+        if (!token) {
+            alert('Masukkan token terlebih dahulu (contoh: Nama Kota)');
+            return;
+        }
+
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i>';
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = 'var(--text-secondary)';
+        statusMsg.innerText = 'Menghubungkan...';
+
+        try {
+            // Simpan token ke local agar user tidak perlu ketik ulang nanti
+            localStorage.setItem('sync_token', token);
+
+            // 1. Cek apakah token sudah ada di server
+            const getUrl = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=user_sync&method=get&token=${encodeURIComponent(token)}`;
+            const response = await fetch(getUrl);
+            const result = await response.json();
+
+            let mergedData = {
+                theme: localStorage.getItem('theme') || 'light',
+                semester: localStorage.getItem('semester') || '1',
+                bookmarks: JSON.parse(localStorage.getItem('bookmarks')) || []
+            };
+
+            if (result.status === 'success') {
+                // Token ditemukan, ambil data dari server
+                const serverData = JSON.parse(result.data);
+
+                // Gabungkan data (merge bookmarks)
+                const serverBookmarks = serverData.bookmarks || [];
+                const localBookmarks = mergedData.bookmarks;
+
+                const bookmarkMap = new Map();
+                localBookmarks.forEach(b => bookmarkMap.set(b.id, b));
+                serverBookmarks.forEach(b => bookmarkMap.set(b.id, b));
+
+                mergedData.bookmarks = Array.from(bookmarkMap.values());
+                mergedData.theme = serverData.theme || mergedData.theme;
+                mergedData.semester = serverData.semester || mergedData.semester;
+
+                statusMsg.innerText = 'Data ditemukan. Mensinkronkan...';
+            } else {
+                statusMsg.innerText = 'Token baru. Membuat cadangan...';
+            }
+
+            // 2. Kirim data gabungan kembali ke server
+            // Gunakan GET query karena lebih aman dari CORS issue di GAS jika data tidak terlalu besar
+            const setUrl = `${SYNC_SCRIPT_URL}${SYNC_SCRIPT_URL.includes('?') ? '&' : '?'}action=user_sync&method=set&token=${encodeURIComponent(token)}&data=${encodeURIComponent(JSON.stringify(mergedData))}`;
+
+            await fetch(setUrl);
+
+            // 3. Terapkan data ke perangkat lokal
+            localStorage.setItem('theme', mergedData.theme);
+            localStorage.setItem('semester', mergedData.semester);
+            localStorage.setItem('bookmarks', JSON.stringify(mergedData.bookmarks));
+
+            // Feedback sukses
+            statusMsg.style.color = 'var(--primary-green)';
+            statusMsg.innerText = 'Sinkronisasi Berhasil!';
+
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+
+        } catch (error) {
+            console.error('Sync Error:', error);
+            statusMsg.style.color = 'red';
+            statusMsg.innerText = 'Gagal sinkron. Coba lagi.';
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = 'Sinkron';
+        }
+    });
 }
 
 
