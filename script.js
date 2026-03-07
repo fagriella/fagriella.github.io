@@ -104,7 +104,6 @@ function initCookieConsent() {
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
     const personalizeToggle = document.getElementById('consent-personalization-toggle');
-    const notificationToggle = document.getElementById('consent-notification-toggle');
     // Notifikasi native toggle sudah digantikan oleh Webpushr button
 
     if (!banner) return;
@@ -121,15 +120,6 @@ function initCookieConsent() {
     const openSettingsModal = () => {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
-
-        // Cerminkan persetujuan notifikasi dengan sinkronisasi OS/Browser dan state lokal
-        if (notificationToggle) {
-            if (Notification.permission === 'granted') {
-                notificationToggle.checked = localStorage.getItem('consent_notifications') !== 'false';
-            } else {
-                notificationToggle.checked = false;
-            }
-        }
 
         settingsModal.classList.add('active');
     };
@@ -192,37 +182,6 @@ function initCookieConsent() {
     if (rejectBtn) rejectBtn.addEventListener('click', rejectAll);
     manageBtn.addEventListener('click', openSettingsModal);
     savePrefsBtn.addEventListener('click', savePreferences);
-
-    // Kustom logic untuk mengontrol proxy click ke Webpushr button 
-    if (notificationToggle) {
-        notificationToggle.addEventListener('change', (e) => {
-            const isChecked = e.target.checked;
-            localStorage.setItem('consent_notifications', isChecked);
-
-            // Klik button Webpushr yang disembunyikan
-            const wpBtn = document.querySelector('#webpushr-subscription-toggle-button');
-            if (wpBtn) {
-                const clickableChild = wpBtn.querySelector('*');
-                if (clickableChild) clickableChild.click();
-                else wpBtn.click();
-            }
-
-            if (isChecked) {
-                // Polling untuk memastikan kalau permission ditolak, toggle kembali false
-                let checkCount = 0;
-                const poller = setInterval(() => {
-                    if (Notification.permission === 'denied') {
-                        notificationToggle.checked = false;
-                        localStorage.setItem('consent_notifications', 'false');
-                        clearInterval(poller);
-                    } else if (Notification.permission === 'granted') {
-                        clearInterval(poller);
-                    }
-                    if (++checkCount > 20) clearInterval(poller); // 10 detik timeout
-                }, 500);
-            }
-        });
-    }
 
     // Test Notification via GAS
     const testNotifBtn = document.getElementById('btn-test-notif');

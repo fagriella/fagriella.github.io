@@ -463,17 +463,10 @@
                             style="background: var(--stone-grey); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.4rem 0.8rem; border-radius: 50px; cursor: pointer; font-size: 0.75rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 4px;">
                             <i class="ph ph-bell"></i> Kirim Test
                         </button>
-                        <label class="toggle-switch" id="custom-notification-toggle-wrapper">
-                            <input type="checkbox" id="consent-notification-toggle">
-                            <span class="slider"></span>
-                        </label>
-
-                        <!-- Webpushr Native Bell Toggle (Sembunyi dibelakang layar untuk proxy klik) -->
-                        <div style="position: absolute; opacity: 0; pointer-events: none; z-index: -1;">
-                            <span id="webpushr-subscription-toggle-button" data-size="1.1"
-                                data-text-when-denied="You've blocked push notifications."
-                                data-tooltip-position="bottom" data-color="#0b5c0a"></span>
-                        </div>
+                        <!-- Webpushr Native Bell Toggle -->
+                        <span id="webpushr-subscription-toggle-button" data-size="1.1"
+                            data-text-when-denied="You've blocked push notifications."
+                            data-tooltip-position="bottom" data-color="#0b5c0a"></span>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
