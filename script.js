@@ -104,6 +104,7 @@ function initCookieConsent() {
     const settingsModal = document.getElementById('cookie-settings-modal');
     const savePrefsBtn = document.getElementById('save-cookie-prefs-btn');
     const personalizeToggle = document.getElementById('consent-personalization-toggle');
+    const notificationToggle = document.getElementById('consent-notification-toggle');
     // Notifikasi native toggle sudah digantikan oleh Webpushr button
 
     if (!banner) return;
@@ -120,6 +121,11 @@ function initCookieConsent() {
     const openSettingsModal = () => {
         // Set toggle state based on current preference
         personalizationToggle.checked = localStorage.getItem('consent_personalization') === 'true';
+
+        // Cerminkan persetujuan notifikasi dengan status OS/Browser native
+        if (notificationToggle) {
+            notificationToggle.checked = (Notification.permission === 'granted');
+        }
 
         settingsModal.classList.add('active');
     };
@@ -182,6 +188,28 @@ function initCookieConsent() {
     if (rejectBtn) rejectBtn.addEventListener('click', rejectAll);
     manageBtn.addEventListener('click', openSettingsModal);
     savePrefsBtn.addEventListener('click', savePreferences);
+
+    // Kustom logic untuk mengontrol proxy click ke Webpushr button 
+    if (notificationToggle) {
+        notificationToggle.addEventListener('click', (e) => {
+            e.preventDefault(); // Jangan ganti visual checkbox sebelum prompt selesai/ditekan
+
+            // Klik button Webpushr yang disembunyikan
+            const wpBtn = document.querySelector('#webpushr-subscription-toggle-button');
+            if (wpBtn) {
+                const clickableChild = wpBtn.querySelector('*');
+                if (clickableChild) clickableChild.click();
+                else wpBtn.click();
+            }
+
+            // Polling untuk memperbarui switch toggle berdasarkan respon user
+            let checkCount = 0;
+            const poller = setInterval(() => {
+                notificationToggle.checked = (Notification.permission === 'granted');
+                if (++checkCount > 20) clearInterval(poller); // 10 detik timeout
+            }, 500);
+        });
+    }
 
     // Test Notification via GAS
     const testNotifBtn = document.getElementById('btn-test-notif');
